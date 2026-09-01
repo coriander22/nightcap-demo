@@ -1,0 +1,1632 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="canvas:aspect-ratio" content="16:9" />
+<title>NIGHTCAP · 今日特调</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+  /* ---------- Seed tokens ---------- */
+  :root{
+    --seed-bg:#17100c; --seed-fg:#f0e3d0; --seed-primary:#c8912f;
+    --seed-accent:#8f2f28; --seed-surface:#241811; --seed-radius:14px;
+    --grain-opacity:.10;
+    --shadow:#000; --ink:#1a120b; --hi:#e9c877;
+    --tin-a:#3a2a1c; --tin-b:#5a3f26;
+    --sp-tequila:#d8a24a; --sp-vodka:#e7dcc4; --sp-gin:#bcd0bd; --sp-rum:#c9772f; --sp-whiskey:#a5501f;
+    --ck-margarita:#cf9a3e; --ck-sunrise:#e0742e; --ck-vodkasour:#e6dcc2; --ck-capecod:#b23a3f;
+    --ck-southside:#a9c39f; --ck-ginfizz:#d8e2c8; --ck-daiquiri:#d8c98f; --ck-maitai:#c56a2c;
+    --ck-whiskeysour:#b8641f; --ck-oldfashioned:#9a4816;
+    --fg-soft:color-mix(in srgb, var(--seed-fg) 68%, transparent);
+    --fg-faint:color-mix(in srgb, var(--seed-fg) 40%, transparent);
+    --bg-deep:color-mix(in srgb, var(--seed-bg) 88%, var(--shadow) 12%);
+    --surface:color-mix(in srgb, var(--seed-surface) 88%, var(--seed-fg) 4%);
+    --surface-2:color-mix(in srgb, var(--seed-surface) 70%, var(--shadow) 12%);
+    --line:color-mix(in srgb, var(--seed-fg) 14%, transparent);
+    --line-strong:color-mix(in srgb, var(--seed-primary) 40%, transparent);
+    --amber:var(--seed-primary);
+    --amber-soft:color-mix(in srgb, var(--seed-primary) 70%, var(--seed-fg) 8%);
+    --glow:color-mix(in srgb, var(--seed-primary) 55%, transparent);
+    --font-display:"Cormorant Garamond","Noto Serif SC",Georgia,serif;
+    --font-cjk-display:"Noto Serif SC","Cormorant Garamond",serif;
+    --font-sans:"Inter","Noto Sans SC",system-ui,-apple-system,sans-serif;
+    --ease:cubic-bezier(.22,.61,.36,1); --ease-io:cubic-bezier(.65,.05,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{background:var(--seed-bg);color:var(--seed-fg);font-family:var(--font-sans);
+    overflow:hidden;-webkit-font-smoothing:antialiased;position:relative}
+
+  /* ---------- Global cinematic overlays ---------- */
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:60;
+    background:
+      radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb,var(--seed-bg) 92%, var(--shadow)) 100%),
+      radial-gradient(80% 60% at 78% 18%, color-mix(in srgb,var(--seed-primary) 12%, transparent), transparent 60%);}
+  .lightleak{position:fixed;inset:0;pointer-events:none;z-index:61;opacity:.5;
+    background:radial-gradient(40% 50% at 88% 92%, color-mix(in srgb,var(--seed-accent) 30%, transparent), transparent 70%);
+    animation:leak 14s var(--ease-io) infinite alternate;}
+  @keyframes leak{0%{opacity:.25;transform:translateX(0)}100%{opacity:.6;transform:translateX(-3%)}}
+  .grain{position:fixed;inset:-120px;pointer-events:none;z-index:62;opacity:var(--grain-opacity);
+    background-repeat:repeat;background-size:180px 180px;mix-blend-mode:overlay;will-change:background-position;}
+
+  /* ---------- Scene chrome ---------- */
+  .brandmark{position:fixed;top:26px;left:34px;z-index:50;display:flex;align-items:center;gap:10px;
+    font-family:var(--font-sans);letter-spacing:.34em;font-size:11px;font-weight:600;
+    text-transform:uppercase;color:var(--fg-soft);}
+  .brandmark .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--glow)}
+  .progress-rail{position:fixed;top:50%;right:30px;transform:translateY(-50%);z-index:50;
+    display:flex;flex-direction:column;gap:16px;align-items:center;}
+  .progress-rail button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;
+    flex-direction:row-reverse;opacity:.5;transition:opacity .4s var(--ease);}
+  .progress-rail button:disabled{cursor:not-allowed}
+  .progress-rail .rdot{width:8px;height:8px;border-radius:50%;border:1px solid var(--fg-faint);
+    background:transparent;transition:all .4s var(--ease)}
+  .progress-rail .rlabel{font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--fg-faint);opacity:0;transform:translateX(6px);transition:all .4s var(--ease);
+    font-weight:500;white-space:nowrap}
+  .progress-rail button:hover{opacity:.9}
+  .progress-rail button:hover .rlabel{opacity:1;transform:translateX(0)}
+  .progress-rail button.active{opacity:1}
+  .progress-rail button.active .rdot{background:var(--amber);border-color:var(--amber);
+    box-shadow:0 0 14px var(--glow);width:9px;height:9px}
+  .progress-rail button.active .rlabel{opacity:1;transform:translateX(0);color:var(--fg-soft)}
+
+  /* ---------- Scene stack ---------- */
+  .stage{position:fixed;inset:0;z-index:10}
+  .scene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    opacity:0;visibility:hidden;pointer-events:none;}
+  .scene.active{opacity:1;visibility:visible;pointer-events:auto}
+  canvas.layer{position:absolute;inset:0;width:100%;height:100%}
+
+  /* ---------- Buttons ---------- */
+  .btn{all:unset;cursor:pointer;font-family:var(--font-sans);font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;font-size:12px;
+    display:inline-flex;align-items:center;gap:12px;padding:15px 28px;border-radius:999px;
+    color:var(--seed-fg);border:1px solid var(--line-strong);
+    background:color-mix(in srgb,var(--seed-primary) 8%, transparent);
+    transition:all .45s var(--ease);position:relative;overflow:hidden;}
+  .btn:hover{border-color:var(--amber);color:var(--ink);
+    background:linear-gradient(180deg,var(--amber-soft),var(--amber));
+    box-shadow:0 10px 40px -12px var(--glow);transform:translateY(-2px)}
+  .btn:active{transform:translateY(0)}
+  .btn:disabled{opacity:.4;pointer-events:none}
+  .btn .ico{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6}
+  .btn-ghost{border-color:var(--line);background:transparent;color:var(--fg-soft)}
+  .btn-ghost:hover{background:transparent;color:var(--seed-fg);border-color:var(--fg-soft);transform:none;box-shadow:none}
+  .eyebrow{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--amber-soft);font-weight:600}
+
+  /* =================== INTRO (P1 词云引入) =================== */
+  .intro{position:fixed;inset:0;z-index:90;overflow:hidden}
+  .intro.done{display:none}
+  .intro .door{position:absolute;top:0;bottom:0;width:50.6%;
+    background:
+      radial-gradient(90% 70% at 50% 30%, color-mix(in srgb,var(--seed-surface) 55%, transparent), transparent 70%),
+      linear-gradient(180deg, color-mix(in srgb,var(--seed-bg) 90%, var(--shadow)), var(--seed-bg));}
+  .intro .door-l{left:0;border-right:1px solid color-mix(in srgb,var(--seed-primary) 26%, transparent)}
+  .intro .door-r{right:0;border-left:1px solid color-mix(in srgb,var(--seed-primary) 26%, transparent)}
+  .intro-inner{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center}
+  .intro-time{position:absolute;top:60px;left:0;right:0;font-size:11px;letter-spacing:.42em;
+    text-transform:uppercase;color:var(--fg-faint);opacity:0}
+  .intro-cloud{position:absolute;inset:0;pointer-events:none}
+  .intro-cloud .w{position:absolute;font-family:var(--font-cjk-display);letter-spacing:.1em;
+    color:var(--fg-soft);opacity:0;white-space:nowrap;animation:wfloat 5s ease-in-out infinite alternate}
+  .intro-cloud .w.hot{color:color-mix(in srgb,var(--seed-accent) 62%, var(--seed-fg) 38%)}
+  @keyframes wfloat{from{transform:translateY(-5px)}to{transform:translateY(6px)}}
+  .intro-mid{position:absolute;top:60%;left:0;right:0;font-size:14px;letter-spacing:.12em;color:var(--fg-soft);opacity:0}
+  .intro-sign{padding:26px 54px;border:1px solid var(--line-strong);border-radius:6px;opacity:0;
+    background:color-mix(in srgb,var(--seed-surface) 72%, var(--shadow));
+    box-shadow:0 0 0 1px color-mix(in srgb,var(--seed-primary) 16%, transparent),
+      0 22px 70px -24px var(--glow), inset 0 0 36px color-mix(in srgb,var(--seed-primary) 10%, transparent);
+    display:flex;flex-direction:column;align-items:center;gap:9px}
+  .intro-sign.on{animation:signflicker .95s steps(1,end) forwards}
+  @keyframes signflicker{0%{opacity:0}10%{opacity:.85}18%{opacity:.15}28%{opacity:1}
+    38%{opacity:.3}52%{opacity:1}64%{opacity:.55}78%,100%{opacity:1}}
+  .intro-sign .sign-zh{font-family:var(--font-cjk-display);font-weight:700;
+    font-size:clamp(30px,4.6vw,52px);letter-spacing:.42em;padding-left:.42em;color:var(--hi);
+    text-shadow:0 0 18px var(--glow),0 0 46px var(--glow)}
+  .intro-sign .sign-en{font-size:10px;letter-spacing:.5em;padding-left:.5em;color:var(--fg-soft)}
+  .intro-line{margin-top:28px;font-size:13px;letter-spacing:.22em;color:var(--fg-soft);opacity:0}
+  .intro-foot{position:absolute;bottom:52px;left:0;right:0;font-size:11px;line-height:1.8;
+    color:var(--fg-faint);letter-spacing:.06em;opacity:0}
+  .intro-skip{position:absolute;right:26px;bottom:20px;z-index:3;font-size:10px;
+    letter-spacing:.24em;color:var(--fg-faint);opacity:0}
+  .intro-effect{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:600px;
+    padding:28px 38px;border:1px solid var(--line-strong);border-radius:var(--seed-radius);
+    background:color-mix(in srgb,var(--seed-surface) 78%, var(--shadow));
+    box-shadow:0 22px 70px -24px var(--glow), inset 0 0 30px color-mix(in srgb,var(--seed-primary) 8%, transparent);
+    opacity:0;text-align:center}
+  .intro-effect .ef-en{font-size:10px;letter-spacing:.5em;color:var(--amber-soft);font-weight:600}
+  .intro-effect .ef-zh{font-family:var(--font-cjk-display);font-size:clamp(24px,3.4vw,38px);font-weight:700;
+    letter-spacing:.3em;padding-left:.3em;margin:10px 0 12px;color:var(--hi);text-shadow:0 0 22px var(--glow)}
+  .intro-effect .ef-p{font-size:13px;line-height:1.9;color:var(--fg-soft);font-weight:300}
+  .intro-effect .ef-p b{color:var(--amber-soft);font-weight:500}
+  .intro-pre{position:absolute;top:22%;left:0;right:0;text-align:center;font-size:13px;
+    letter-spacing:.16em;color:var(--fg-soft);opacity:0}
+
+  /* =================== P2 正式介绍 =================== */
+  #s1 .wrap{position:relative;z-index:2;text-align:center;max-width:900px;padding:0 24px}
+  #s1 .glass-badge{margin:0 auto 30px;width:88px;height:88px}
+  #s1 h1{font-family:var(--font-display);font-weight:500;font-size:clamp(58px,9.2vw,132px);
+    line-height:.92;letter-spacing:-.03em;color:var(--seed-fg);
+    text-shadow:0 2px 40px color-mix(in srgb,var(--seed-primary) 30%, transparent)}
+  #s1 h1 em{font-style:italic;color:var(--amber-soft)}
+  #s1 .cjk{font-family:var(--font-cjk-display);font-weight:600;font-size:clamp(20px,2.4vw,30px);
+    letter-spacing:.5em;margin:22px 0 0;color:var(--fg-soft);padding-left:.5em}
+  #s1 .tagline{max-width:560px;margin:26px auto 8px;font-size:16px;line-height:1.7;color:var(--fg-soft);font-weight:300}
+  .creed{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:780px;margin:30px auto 34px}
+  .creed .card{border:1px solid var(--line);border-radius:var(--seed-radius);background:var(--surface);
+    padding:18px 18px;text-align:left;transition:all .4s var(--ease)}
+  .creed .card:hover{border-color:var(--line-strong);transform:translateY(-3px)}
+  .creed .card .n{font-family:var(--font-display);font-style:italic;color:var(--amber-soft);font-size:15px}
+  .creed .card h3{font-family:var(--font-cjk-display);font-size:16px;letter-spacing:.14em;margin:8px 0 6px}
+  .creed .card p{font-size:12px;line-height:1.7;color:var(--fg-soft);font-weight:300}
+  #s1 .hint{margin-top:26px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--fg-faint)}
+
+  /* ---------- shared scene header ---------- */
+  .scene-head{position:absolute;top:64px;left:0;right:0;text-align:center;z-index:3}
+  .scene-head .idx{font-family:var(--font-display);font-style:italic;font-size:19px;color:var(--amber-soft);margin-bottom:6px}
+  .scene-head h2{font-family:var(--font-cjk-display);font-weight:600;font-size:clamp(24px,3vw,36px);letter-spacing:.14em}
+  .scene-head p{font-size:13px;color:var(--fg-soft);margin-top:8px;font-weight:300;letter-spacing:.04em}
+
+  /* =================== P3 三部曲 =================== */
+  .acts-wrap{position:relative;z-index:2;text-align:center;padding:0 24px}
+  .acts-label{font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--fg-faint);margin:6px 0 20px}
+  .acts{display:flex;justify-content:center;gap:0;margin:0 auto 40px;max-width:760px}
+  .act{flex:1;padding:2px 26px;position:relative;text-align:center}
+  .act + .act::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:1px;background:var(--line)}
+  .act .rn{font-family:var(--font-display);font-style:italic;font-size:26px;line-height:1;color:var(--amber-soft)}
+  .act .at{font-family:var(--font-cjk-display);font-weight:600;font-size:18px;letter-spacing:.2em;margin:12px 0 7px;color:var(--seed-fg)}
+  .act .ad{font-size:12.5px;line-height:1.7;color:var(--fg-soft);font-weight:300;letter-spacing:.02em}
+
+  /* =================== P4 / P5 shared grid =================== */
+  .grid2{position:relative;z-index:2;display:grid;grid-template-columns:1.15fr .85fr;gap:36px;
+    width:min(1240px,92vw);height:100%;align-items:center;padding:128px 0 96px}
+  .scene-actions{position:absolute;bottom:36px;left:0;right:0;display:flex;justify-content:center;gap:16px;z-index:4}
+  .graph-panel{position:relative;height:min(52vh,470px);border:1px solid var(--line);
+    border-radius:var(--seed-radius);background:
+      radial-gradient(120% 100% at 30% 0%, color-mix(in srgb,var(--seed-surface) 60%, transparent), transparent 70%),
+      color-mix(in srgb,var(--seed-bg) 60%, transparent);
+    overflow:hidden;backdrop-filter:blur(2px)}
+  .graph-panel .cap{position:absolute;top:16px;left:18px;z-index:3;font-size:10px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--fg-faint);display:flex;align-items:center;gap:8px}
+  .graph-panel .cap .live{width:6px;height:6px;border-radius:50%;background:var(--amber);
+    box-shadow:0 0 10px var(--glow);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .graph-panel .legend{position:absolute;bottom:14px;left:18px;z-index:3;display:flex;gap:16px;
+    font-size:10px;color:var(--fg-soft);letter-spacing:.06em}
+  .graph-panel .legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  #graphTip{position:absolute;z-index:5;pointer-events:none;opacity:0;transform:translate(-50%,-140%);
+    background:var(--surface-2);border:1px solid var(--line-strong);border-radius:8px;padding:8px 11px;
+    font-size:11px;line-height:1.5;white-space:nowrap;transition:opacity .2s;box-shadow:0 12px 30px -14px var(--shadow)}
+  #graphTip b{color:var(--amber-soft);font-weight:600}
+  #graphTip small{color:var(--fg-soft)}
+  .left-col{display:flex;flex-direction:column;gap:16px}
+
+  .side{display:flex;flex-direction:column;gap:16px;max-height:100%;overflow-y:auto;padding-right:4px}
+  .metric-card{border:1px solid var(--line);border-radius:var(--seed-radius);background:var(--surface);padding:18px 20px}
+  .stress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .gauge-wrap{display:flex;align-items:center;gap:18px}
+  .gauge{position:relative;width:104px;height:104px;flex:none}
+  .gauge .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gauge .num b{font-family:var(--font-display);font-size:34px;font-weight:600;line-height:1;color:var(--seed-fg)}
+  .gauge .num span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-faint);margin-top:4px}
+  .stress-note{font-size:12px;line-height:1.65;color:var(--fg-soft);font-weight:300}
+  .stress-note b{color:var(--amber-soft);font-weight:500}
+  .factor-list{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .factor{margin-bottom:9px;opacity:0}
+  .factor .top{display:flex;justify-content:space-between;font-size:11px;color:var(--fg-soft);margin-bottom:4px}
+  .factor .top b{color:var(--seed-fg);font-weight:500}
+  .factor .bar{height:4px;border-radius:99px;background:var(--line);overflow:hidden}
+  .factor .bar i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,var(--amber-soft),var(--amber))}
+  .factor.neg .bar i{background:linear-gradient(90deg,color-mix(in srgb,var(--seed-accent) 55%,transparent),var(--seed-accent))}
+  .factor .fd{font-size:10px;color:var(--fg-faint);margin-top:3px;letter-spacing:.02em}
+  .proof-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .proof-meter{display:flex;gap:6px}
+  .proof-meter i{flex:1;height:10px;border-radius:3px;background:var(--line);transition:all .5s var(--ease)}
+  .proof-meter i.on{background:linear-gradient(180deg,var(--amber-soft),var(--amber));box-shadow:0 0 12px var(--glow)}
+  .proof-read{margin-top:10px;font-size:12px;color:var(--fg-soft)}
+  .proof-read b{font-family:var(--font-display);font-size:17px;color:var(--seed-fg)}
+  .spirits-title{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-soft);margin:2px 0 8px}
+  .spirit-note{min-height:32px;margin-bottom:8px;font-size:12px;line-height:1.6;color:var(--fg-soft);font-weight:300}
+  .spirit-note b{color:var(--amber-soft);font-weight:500;font-family:var(--font-cjk-display)}
+  .spirit-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .spirit{position:relative;cursor:pointer;border:1px solid var(--line);border-radius:12px;
+    padding:12px;display:flex;gap:12px;align-items:center;background:var(--surface-2);
+    transition:all .4s var(--ease);overflow:hidden}
+  .spirit:hover{border-color:var(--line-strong);transform:translateY(-2px)}
+  .spirit.sel{border-color:var(--amber);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--seed-primary) 14%,transparent),var(--surface-2));
+    box-shadow:0 12px 34px -18px var(--glow)}
+  .spirit .bottle{width:24px;height:42px;flex:none;display:block}
+  .spirit .tx{flex:1;min-width:0}
+  .spirit .zh{font-family:var(--font-cjk-display);font-size:14px;font-weight:600;letter-spacing:.06em}
+  .spirit .en{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-faint);margin-top:2px}
+  .spirit .stats{font-size:9.5px;color:var(--fg-faint);letter-spacing:.06em;margin-top:4px}
+  .spirit .rec-badge{position:absolute;top:8px;right:8px;font-size:9px;letter-spacing:.12em;color:var(--ink);
+    background:linear-gradient(180deg,var(--amber-soft),var(--amber));padding:3px 8px;border-radius:99px;
+    opacity:0;transform:scale(.8);transition:all .4s var(--ease)}
+  .spirit.rec .rec-badge{opacity:1;transform:scale(1)}
+
+  /* =================== P5 人格 / 冰 / 摇 =================== */
+  .side-l{display:flex;flex-direction:column;gap:16px;max-height:100%;overflow-y:auto;padding-right:4px}
+  .quiz-card{border:1px solid var(--line);border-radius:var(--seed-radius);background:var(--surface);padding:22px 22px 16px}
+  .q-idx{font-size:10px;letter-spacing:.3em;color:var(--amber-soft);margin-bottom:10px;font-weight:600}
+  .q-t{font-family:var(--font-cjk-display);font-size:17px;line-height:1.6;margin-bottom:12px}
+  .quiz-opt{display:block;width:100%;text-align:left;margin-top:10px;padding:12px 14px;
+    border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--fg-soft);
+    font-size:13px;cursor:pointer;transition:all .3s var(--ease);font-family:var(--font-sans)}
+  .quiz-opt:hover{border-color:var(--amber);color:var(--seed-fg);transform:translateX(4px)}
+  .persona-card{border:1px solid var(--line-strong);border-radius:var(--seed-radius);padding:20px 22px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--seed-primary) 10%,transparent),var(--surface))}
+  .persona-card .p-en{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--amber-soft);font-weight:600}
+  .persona-card .p-zh{font-family:var(--font-cjk-display);font-size:26px;font-weight:700;letter-spacing:.1em;margin:8px 0 8px}
+  .persona-card .p-desc{font-size:12.5px;line-height:1.7;color:var(--fg-soft);font-weight:300}
+  .persona-card .p-axes{display:flex;gap:8px;margin-top:12px}
+  .persona-card .p-axes span{font-size:10px;letter-spacing:.1em;color:var(--fg-soft);
+    border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+  .tray-title{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-soft);margin-bottom:12px}
+  .ice-tray{display:flex;gap:22px;flex-wrap:wrap}
+  .tray-sub{flex-basis:100%;font-size:10px;letter-spacing:.22em;color:var(--fg-faint);margin:4px 0 0}
+  .ice{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:grab;touch-action:none;user-select:none}
+  .ice .cube{width:50px;height:50px;border-radius:12px;transform:rotate(8deg);
+    background:linear-gradient(135deg,color-mix(in srgb,var(--h) 72%,#fff 14%),color-mix(in srgb,var(--h) 55%,#000 12%));
+    box-shadow:0 10px 26px -10px var(--h), inset 0 0 14px rgba(255,255,255,.35);
+    border:1px solid color-mix(in srgb,var(--h) 70%, #fff 20%);transition:transform .3s var(--ease)}
+  .ice:hover .cube{transform:rotate(8deg) scale(1.08)}
+  .ice .lbl{font-size:10px;color:var(--fg-soft);letter-spacing:.08em}
+  .ice.rec .cube{outline:2px solid var(--amber);outline-offset:3px}
+  .ice.pred .cube{outline:2px solid var(--amber);outline-offset:3px}
+  .ice.self .cube{outline:2px dashed color-mix(in srgb,var(--seed-fg) 55%,transparent);outline-offset:3px}
+  .ice .icetag{font-size:9px;letter-spacing:.1em;color:var(--amber-soft);
+    border:1px solid var(--line-strong);border-radius:99px;padding:2px 7px}
+  .ice .icetag.self{color:var(--fg-soft);border-color:var(--line)}
+  .scan-result{margin-top:12px;font-size:12px;color:var(--fg-soft);border-top:1px solid var(--line);padding-top:10px}
+  .scan-result b{color:var(--amber-soft);font-weight:600;font-family:var(--font-cjk-display)}
+  .brow{margin-bottom:11px;opacity:0}
+  .brow .bt{display:flex;justify-content:space-between;font-size:10px;color:var(--fg-faint);margin-bottom:5px}
+  .brow .bt b{color:var(--fg-soft);font-weight:500;font-size:11px;letter-spacing:.08em}
+  .brow .bi{position:relative;height:4px;border-radius:99px;background:var(--line)}
+  .brow .bi i{position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;
+    transform:translate(-50%,-50%);background:var(--amber);box-shadow:0 0 10px var(--glow)}
+  .brow .bn{font-size:10px;color:var(--fg-faint);margin-top:5px}
+  .ice.rec .lbl{color:var(--amber-soft)}
+  .tray-block.locked .ice{opacity:.3;pointer-events:none}
+  .tray-block.locked .ice.dropped{opacity:1}
+  .ice-ghost{position:fixed;z-index:95;width:50px;height:50px;border-radius:12px;pointer-events:none;
+    transform:translate(-50%,-50%) rotate(8deg)}
+  .mix-col{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .mix-wrap{position:relative;width:340px;height:400px}
+  .mix-wrap canvas{position:absolute;inset:0}
+  #shakeStage{cursor:grab;touch-action:none;user-select:none}
+  #shakeStage.grab{cursor:grabbing}
+  .shake-cta{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .shake-instr{font-size:13px;color:var(--fg-soft);font-weight:300;letter-spacing:.04em}
+  .shake-instr b{color:var(--amber-soft);font-weight:500}
+  .shake-bar{width:300px;height:4px;border-radius:999px;background:var(--line);overflow:hidden}
+  .shake-bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,var(--amber-soft),var(--amber));box-shadow:0 0 14px var(--glow);transition:width .12s linear}
+  .shake-pct{font-family:var(--font-display);font-size:16px;color:var(--fg-soft);letter-spacing:.1em}
+
+  /* =================== P6 尾调 =================== */
+  #s5 .reveal{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:56px;
+    width:min(1120px,92vw);align-items:center;height:100%;padding:90px 0 60px}
+  #s5 .glass-hero{display:flex;align-items:center;justify-content:center;position:relative}
+  #s5 .glass-hero .halo{position:absolute;width:320px;height:320px;border-radius:50%;
+    background:radial-gradient(circle,var(--glow),transparent 62%);filter:blur(6px);opacity:.6}
+  #s5 .final-glass{width:300px;height:400px;position:relative;z-index:2}
+  #s5 .info{max-width:480px;max-height:100%;overflow-y:auto;padding-right:8px}
+  #s5 .ck-name{font-family:var(--font-display);font-size:clamp(36px,4.2vw,56px);line-height:1.02;
+    letter-spacing:-.02em;font-weight:600;margin:12px 0 4px}
+  #s5 .ck-en{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--amber-soft);font-weight:600}
+  #s5 .recipe{margin:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;
+    display:grid;grid-template-columns:repeat(2,1fr);gap:14px 24px}
+  #s5 .recipe .row .k{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg-faint);margin-bottom:5px}
+  #s5 .recipe .row .v{font-family:var(--font-cjk-display);font-size:14px;color:var(--seed-fg);font-weight:500}
+  .music-card{display:flex;align-items:center;gap:14px;border:1px solid var(--line);
+    border-radius:var(--seed-radius);background:var(--surface);padding:12px 16px;margin-bottom:16px}
+  .playbtn{all:unset;cursor:pointer;width:40px;height:40px;flex:none;border-radius:50%;
+    border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;
+    color:var(--amber-soft);transition:all .3s var(--ease)}
+  .playbtn:hover{border-color:var(--amber);color:var(--hi);box-shadow:0 0 18px -4px var(--glow)}
+  .playbtn svg{width:15px;height:15px;fill:currentColor}
+  .m-meta{min-width:0}
+  .m-t{font-family:var(--font-cjk-display);font-size:14px;font-weight:600;letter-spacing:.04em}
+  .m-s{font-size:10.5px;color:var(--fg-faint);letter-spacing:.08em;margin-top:3px}
+  .eq{display:flex;gap:3px;align-items:flex-end;height:20px;margin-left:auto;opacity:0;transition:opacity .3s}
+  .music-card.playing .eq{opacity:1}
+  .eq i{width:3px;height:30%;background:var(--amber);border-radius:2px;animation:eq .9s ease-in-out infinite alternate}
+  .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}
+  @keyframes eq{from{height:20%}to{height:100%}}
+  #s5 .poem{position:relative;padding-left:20px;margin-bottom:18px}
+  #s5 .poem::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:2px;
+    background:linear-gradient(var(--amber),transparent)}
+  #s5 .poem p{font-family:var(--font-cjk-display);font-size:17px;line-height:1.9;color:var(--seed-fg);
+    font-weight:500;letter-spacing:.04em}
+  #s5 .poem p .dim{color:var(--fg-soft);font-weight:400}
+  .todo-block{margin:4px 0 20px}
+  .todo-head{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg-soft);margin-bottom:10px}
+  .todo{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;
+    background:var(--surface-2);padding:12px 14px;margin-bottom:8px;transition:opacity .4s}
+  .todo .chk{all:unset;cursor:pointer;flex:none;width:18px;height:18px;border-radius:50%;
+    border:1px solid var(--line-strong);margin-top:2px;transition:all .3s}
+  .todo .chk:hover{border-color:var(--amber)}
+  .todo.done{opacity:.5}
+  .todo.done .chk{background:var(--amber);border-color:var(--amber)}
+  .todo .t-who{font-size:12px;color:var(--amber-soft);font-weight:600;margin-bottom:3px}
+  .todo .t-next{font-size:12.5px;line-height:1.6;color:var(--fg-soft)}
+  .todo .t-stuck{font-size:10.5px;color:var(--fg-faint);margin-top:4px}
+  #s5 .final-actions{display:flex;gap:14px}
+
+  .toast{position:fixed;bottom:36px;left:50%;transform:translate(-50%,20px);z-index:80;
+    background:var(--surface-2);border:1px solid var(--line-strong);border-radius:999px;
+    padding:12px 22px;font-size:12px;letter-spacing:.08em;color:var(--fg-soft);
+    opacity:0;transition:all .4s var(--ease);pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:1080px){
+    .grid2{grid-template-columns:1fr;gap:18px;padding:118px 0 92px;overflow-y:auto;align-items:start}
+    .graph-panel{height:38vh}
+    .creed{grid-template-columns:1fr;max-width:340px}
+    .acts{flex-direction:column;gap:18px;max-width:300px}
+    .act + .act::before{left:20px;right:20px;top:-9px;bottom:auto;width:auto;height:1px}
+    #s5 .reveal{grid-template-columns:1fr;gap:26px;text-align:center;overflow-y:auto;align-items:start}
+    #s5 .glass-hero{order:-1}
+    #s5 .poem{padding-left:0}#s5 .poem::before{display:none}
+    #s5 .final-actions,#s5 .recipe{justify-content:center}
+    .progress-rail{right:14px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .grain,.lightleak{animation:none}
+    .eq i{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ P1 · INTRO 词云引入 ============ -->
+<div class="intro" id="intro" data-component="intro">
+  <div class="door door-l"></div>
+  <div class="door door-r"></div>
+  <div class="intro-inner">
+    <div class="intro-time" id="introTime">周日 · 22:47 · 身体休息日</div>
+    <div class="intro-cloud" id="introCloud"></div>
+    <div class="intro-mid" id="introMid">身体在休息，大脑还在加班。</div>
+    <div class="intro-effect" id="introEffect">
+      <div class="ef-en">ZEIGARNIK EFFECT</div>
+      <div class="ef-zh">蔡格尼克效应</div>
+      <p class="ef-p">大脑会对 <b>未完成、未闭环</b> 的任务持续维持认知张力——<br>它们像后台进程，反复闯入意识，消耗心理资源。</p>
+    </div>
+    <div class="intro-pre" id="introPre">于是周日晚，有了这家专门寄存「未完成」的酒馆。</div>
+    <div class="intro-sign" id="introSign">
+      <span class="sign-zh">深夜酒馆</span>
+      <span class="sign-en">CYBER TAVERN · 专治周日焦虑</span>
+    </div>
+    <div class="intro-line" id="introLine">推门而入 · 把未完成寄存在吧台</div>
+    <div class="intro-foot" id="introFoot">Masicampo &amp; Baumeister 研究：为未完成任务写下清晰的下一步，<br>即可显著降低侵入式反刍。今晚，先调一杯。</div>
+  </div>
+  <div class="intro-skip" id="introSkip">点击任意处跳过</div>
+</div>
+
+<!-- overlays -->
+<div class="vignette"></div>
+<div class="lightleak"></div>
+<div class="grain" id="grain"></div>
+
+<div class="brandmark"><span class="dot"></span>NIGHTCAP · 今日特调</div>
+<nav class="progress-rail" id="rail" aria-label="场景导航"></nav>
+
+<main class="stage" id="content" role="main">
+
+  <!-- ============ P2 · 正式介绍 ============ -->
+  <section class="scene" id="s1" data-component="scene-intro-page">
+    <canvas class="layer" id="dustCanvas"></canvas>
+    <div class="wrap">
+      <svg class="glass-badge" viewBox="0 0 88 88" fill="none" aria-hidden="true">
+        <path d="M20 22h48L46 50v22" stroke="var(--amber)" stroke-width="1.4"/>
+        <path d="M46 72c-6 0-11 1-11 3h22c0-2-5-3-11-3z" stroke="var(--amber)" stroke-width="1.4"/>
+        <circle cx="46" cy="34" r="3" fill="var(--amber)"/>
+        <path d="M28 22c4 6 10 9 18 9s14-3 18-9" stroke="var(--amber-soft)" stroke-width="1"/>
+      </svg>
+      <h1>Night<em>cap</em></h1>
+      <div class="cjk">今 日 特 调</div>
+      <p class="tagline">一天将尽，把你这周的协作、卡点与压力蒸馏进一只杯子里。<br>它会读你的钉钉 IM，也会读你的工作人格——然后附上明天的一小步。</p>
+      <div class="creed" data-component="creed-cards">
+        <div class="card"><div class="n">01</div><h3>读取 IM</h3><p>拉取本周钉钉协作：深夜消息、未闭环、等待回应——让数据替疲惫说话。</p></div>
+        <div class="card"><div class="n">02</div><h3>蒸馏压力</h3><p>六项因子加权出焦虑指数，映射烈度，配一支撑得住场面的基酒。</p></div>
+        <div class="card"><div class="n">03</div><h3>生成尾调</h3><p>工作人格凝成底色冰块，摇匀成杯，附上一首歌与明天的第一步。</p></div>
+      </div>
+      <button class="btn" id="enterBtn">
+        查看三部曲
+        <svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <div class="hint">向下滚动 · 或按 → 进入</div>
+    </div>
+  </section>
+
+  <!-- ============ P3 · 三部曲 ============ -->
+  <section class="scene" id="s2" data-component="scene-acts">
+    <div class="scene-head">
+      <div class="idx">Prologue</div>
+      <h2>今 晚 特 调 · 三 部 曲</h2>
+      <p>大约三分钟，把这一周蒸馏成一杯。</p>
+    </div>
+    <div class="acts-wrap">
+      <div class="acts-label">A Nightcap in Three Acts · 特调三部曲</div>
+      <div class="acts" data-component="acts-roadmap">
+        <div class="act"><div class="rn">I</div><div class="at">基 酒</div><div class="ad">焦虑图谱 · 压力指数<br>按烈度配酒，理清过去的混乱</div></div>
+        <div class="act"><div class="rn">II</div><div class="at">冰 块</div><div class="ad">工作人格微测试<br>拖入底色冰块 · 摇匀</div></div>
+        <div class="act"><div class="rn">III</div><div class="at">尾 调</div><div class="ad">专属特调 · 一首歌<br>与明天的第一步</div></div>
+      </div>
+      <button class="btn" id="startBtn">
+        从基酒开始
+        <svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ P4 · STEP1 焦虑图谱 / 基酒 ============ -->
+  <section class="scene" id="s3" data-component="scene-base">
+    <div class="scene-head">
+      <div class="idx">i. 基酒</div>
+      <h2>焦 虑 图 谱 · 定 一 支 基 酒</h2>
+      <p>读取本周钉钉 IM 记录，算出焦虑指数，按烈度为你配基酒。</p>
+    </div>
+    <div class="grid2">
+      <div class="left-col">
+        <button class="btn" id="analyzeBtn">
+          开始分析你的焦虑源泉
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+        </button>
+        <div class="graph-panel" data-component="graph">
+          <div class="cap"><span class="live"></span>DINGTALK · 本周关系与事件（模拟数据）</div>
+          <canvas class="layer" id="graphCanvas"></canvas>
+          <div id="graphTip"></div>
+          <div class="legend">
+            <span><i style="background:var(--amber)"></i>你</span>
+            <span><i style="background:color-mix(in srgb,var(--seed-fg) 60%,transparent)"></i>协作者</span>
+            <span><i style="background:var(--seed-accent)"></i>压力事件</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="metric-card" data-component="stress-gauge">
+          <div class="stress-top"><span class="eyebrow">Stress Index · 焦虑指数</span></div>
+          <div class="gauge-wrap">
+            <div class="gauge">
+              <svg viewBox="0 0 120 120" style="transform:rotate(-90deg)">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="7"/>
+                <circle id="gaugeArc" cx="60" cy="60" r="52" fill="none" stroke="var(--amber)" stroke-width="7"
+                  stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"
+                  style="filter:drop-shadow(0 0 6px var(--glow))"/>
+              </svg>
+              <div class="num"><b id="stressNum">0</b><span id="stressLvl">待分析</span></div>
+            </div>
+            <p class="stress-note" id="stressNote">点击左侧「开始分析」，从 IM 记录里蒸馏你的焦虑指数。</p>
+          </div>
+          <div class="factor-list" id="factorList"></div>
+        </div>
+
+        <div class="metric-card" data-component="proof-meter">
+          <div class="proof-head">
+            <span class="eyebrow">Proof · 烈度</span>
+            <span class="proof-read">Lv.<b id="proofNum">–</b> / 5</span>
+          </div>
+          <div class="proof-meter" id="proofMeter"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="proof-read" id="proofTxt">焦虑指数将映射为酒的烈度。</div>
+        </div>
+
+        <div>
+          <div class="spirits-title">为你推荐 · Base Spirit</div>
+          <div class="spirit-note" id="spiritNote">分析完成后，按烈度推荐；也可以另选一支。</div>
+          <div class="spirit-cards" id="spiritCards"></div>
+        </div>
+      </div>
+    </div>
+    <div class="scene-actions">
+      <button class="btn btn-ghost" data-nav="1">← 返回</button>
+      <button class="btn" id="toIce" disabled>
+        选定基酒 · 下一步
+        <svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ P5 · STEP2 人格 / 冰块 / 摇匀 ============ -->
+  <section class="scene" id="s4" data-component="scene-ice">
+    <div class="scene-head">
+      <div class="idx">ii. 冰块</div>
+      <h2>人 格 底 色 · 入 杯 摇 匀</h2>
+      <p>IM 数据先预测你的底色，四题自我校准可选；拖冰入杯（至多两块），再摇匀。</p>
+    </div>
+    <div class="grid2">
+      <div class="side-l">
+        <div class="metric-card" id="scanCard" data-component="im-style-scan">
+          <div class="stress-top"><span class="eyebrow">IM 工作风格扫描 · 数据预测</span></div>
+          <div id="scanBars"></div>
+          <div class="scan-result" id="scanResult">正在读取本周 IM 行为…</div>
+        </div>
+        <div class="quiz-card" id="quizBox" data-component="work-persona-quiz"></div>
+        <div class="persona-card" id="personaCard" hidden data-component="persona-result"></div>
+        <div class="tray-block" id="trayBlock" hidden>
+          <div class="tray-title">拖冰入杯 · 至多两块（底色 + 情绪）</div>
+          <div class="ice-tray" id="iceTray"></div>
+        </div>
+      </div>
+      <div class="mix-col">
+        <div class="mix-wrap">
+          <canvas id="mixGlass"></canvas>
+          <canvas id="shakeStage" hidden></canvas>
+        </div>
+        <div class="shake-cta">
+          <button class="btn" id="coverBtn" disabled>
+            扣壶 · 开始摇匀
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 3v10M8 9l4 4 4-4M5 19h14"/></svg>
+          </button>
+          <div class="shake-instr" id="shakeInstr" hidden>按住酒壶<b> 上下拖动</b>，或反复点击开始摇酒</div>
+          <div class="shake-bar" id="shakeBarWrap" hidden><i id="shakeFill"></i></div>
+          <div class="shake-pct" id="shakePct" hidden>0%</div>
+        </div>
+      </div>
+    </div>
+    <div class="scene-actions">
+      <button class="btn btn-ghost" data-nav="2">← 返回</button>
+    </div>
+  </section>
+
+  <!-- ============ P6 · 尾调 ============ -->
+  <section class="scene" id="s5" data-component="scene-reveal">
+    <div class="reveal">
+      <div class="glass-hero" data-component="cocktail-reveal">
+        <div class="halo"></div>
+        <canvas id="finalGlass" class="final-glass"></canvas>
+      </div>
+      <div class="info">
+        <div class="eyebrow">为你专属特调 · Your Nightcap</div>
+        <div class="ck-name" id="ckName">—</div>
+        <div class="ck-en" id="ckEn"></div>
+        <div class="recipe" id="ckRecipe"></div>
+        <div class="music-card" id="musicCard" data-component="music-card">
+          <button class="playbtn" id="playBtn" aria-label="播放音乐">
+            <svg id="icoPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="icoPause" viewBox="0 0 24 24" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+          </button>
+          <div class="m-meta">
+            <div class="m-t" id="trackTitle"></div>
+            <div class="m-s" id="trackStyle"></div>
+          </div>
+          <div class="eq" id="eq"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="poem" data-component="drink-poem"><p id="ckPoem"></p></div>
+        <div class="todo-block" data-component="todo-list">
+          <div class="todo-head">合上页面前 · 给未闭环写下下一步</div>
+          <div class="todo-list" id="todoList"></div>
+        </div>
+        <div class="final-actions">
+          <button class="btn" id="shareBtn">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>
+            收藏酒语
+          </button>
+          <button class="btn btn-ghost" id="againBtn">再调一杯</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   NIGHTCAP · 今日特调 — immersive controller (v2)
+   ========================================================================= */
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+
+const ROOTCSS = getComputedStyle(document.documentElement);
+const tok = name => ROOTCSS.getPropertyValue(name).trim();
+const C = {
+  amber:tok('--seed-primary'), accent:tok('--seed-accent'), cream:tok('--seed-fg'),
+  hi:tok('--hi'), ink:tok('--ink'), tinA:tok('--tin-a'), tinB:tok('--tin-b')
+};
+
+/* ---------- Mock DingTalk dataset (demo only) ---------- */
+const DINGTALK = {
+  me: { name:'你', role:'产品设计' },
+  contacts:[
+    { name:'林之遥', role:'产品经理', weight:9, warmth:6 },
+    { name:'陈屿', role:'技术负责人', weight:8, warmth:5 },
+    { name:'苏窈', role:'设计搭档', weight:7, warmth:9 },
+    { name:'Ray', role:'海外客户', weight:6, warmth:3 },
+    { name:'老周', role:'直属上级', weight:8, warmth:4 },
+    { name:'知微', role:'运营', weight:5, warmth:8 },
+    { name:'阿橙', role:'实习生', weight:4, warmth:9 },
+    { name:'K.', role:'合作方', weight:5, warmth:5 },
+    { name:'夜班群', role:'跨时区群', weight:6, warmth:2 }
+  ],
+  /* 未闭环清单 → 尾调待办生成 */
+  loops:[
+    { who:'Ray · 海外方案', stuck:'时差 12 小时 · 已 26h 未获回应', next:'明早 10:00 发一句带两个选项的提醒，让 Ray 只需回 A/B。' },
+    { who:'老周 · Q3 复盘框架', stuck:'球在你这里 · 一直没时间动', next:'明天 9:30 花 25 分钟写三点提纲，先发给老周占位。' },
+    { who:'夜班群 · 跨时区交接', stuck:'交接边界不清 · 反复返工', next:'用 10 分钟写一页交接清单， pin 到群公告，本周不再口头交接。' }
+  ],
+  /* IM 行为指标 → 工作风格扫描（数据预测人格） */
+  behavior:{ replyMin:6, initiate:62, emoji:18, latestActive:'23:40' }
+};
+
+/* ---------- 焦虑指数因子模型（可解释） ---------- */
+const FACTORS = [
+  { label:'深夜消息',   detail:'22:00–01:00 共 23 条',            score:82, w:.20 },
+  { label:'未闭环任务', detail:'6 件卡点 / 悬置协作',             score:86, w:.22 },
+  { label:'最长未回应', detail:'Ray 的方案已悬 26 小时',          score:74, w:.16 },
+  { label:'周末侵入',   detail:'休息日收到 41 条工作消息',        score:68, w:.16 },
+  { label:'会议过载',   detail:'14 场会议 · 日常的 2.1 倍',       score:60, w:.12 },
+  { label:'@ 密度',     detail:'本周被 @ 57 次',                  score:58, w:.14 },
+  { label:'被赞与支援', detail:'11 次点赞 · 6 次支援 · 缓冲 −6',  score:-40, w:.15, neg:true }
+];
+function computeStress(){
+  let s=0; FACTORS.forEach(f=>{ s += f.score*f.w; });
+  return clamp(Math.round(s),5,96);
+}
+const STRESS = computeStress();
+const PROOF = STRESS>80?5: STRESS>66?4: STRESS>50?3: STRESS>33?2:1;
+
+/* ---------- Base spirits（烈度 / 苦涩度） ---------- */
+const SPIRITS = {
+  vodka:{ zh:'伏特加', en:'Vodka', proof:1, abv:'40%', bitter:1, hue:tok('--sp-vodka'),
+    note:'近乎透明的<b>纯净中性</b>——把喧嚣过滤掉，只剩清醒的留白。' },
+  gin:{ zh:'金酒', en:'Gin', proof:2, abv:'40%', bitter:2, hue:tok('--sp-gin'),
+    note:'杜松子与<b>草本层层展开</b>，清冽而理性——适合仍在复盘的深夜。' },
+  rum:{ zh:'朗姆', en:'Rum', proof:3, abv:'37.5%', bitter:2, hue:tok('--sp-rum'),
+    note:'甘蔗糖蜜的<b>温热甜香</b>——让紧绷的肩线慢慢落下。' },
+  tequila:{ zh:'龙舌兰', en:'Tequila', proof:4, abv:'40%', bitter:3, hue:tok('--sp-tequila'),
+    note:'龙舌兰草的<b>青草与胡椒</b>——给敢于正面迎击这一天的人。' },
+  whiskey:{ zh:'威士忌', en:'Whiskey', proof:5, abv:'43%', bitter:4, hue:tok('--sp-whiskey'),
+    note:'谷物、橡木与焦糖的<b>烟熏回甘</b>——献给需要独处一会儿的你。' }
+};
+
+/* ---------- IM 工作风格扫描（双极指标 → 数据预测人格） ---------- */
+const BEHAVIOR=[
+  { label:'回应节奏', l:'批量处理', r:'秒回', v:78, note:'平均 6 分钟内回复' },
+  { label:'主动度',   l:'等被 @',   r:'发起者', v:62, note:'62% 协作由你发起' },
+  { label:'表达温度', l:'纯文字党', r:'表情党', v:64, note:'表情密度 18%' },
+  { label:'时间边界', l:'22 点熄灯', r:'深夜活跃', v:70, note:'最晚活跃 23:40' }
+];
+function predictPersona(){
+  const act=(BEHAVIOR[0].v>=50?1:0)+(BEHAVIOR[1].v>=50?1:0)>=1;
+  const heat=(BEHAVIOR[2].v>=50?1:0)+(BEHAVIOR[3].v>=50?1:0)>=1;
+  return act&&heat?'captain': act?'lighthouse': heat?'greenhouse':'deepsea';
+}
+
+/* ---------- 情绪冰（由本周焦虑数据派生，可与底色冰多选搭配） ---------- */
+const EMO_ICES=[
+  { k:'sleep',   name:'洋甘菊安眠冰', hue:'#9fb6d9', from:'给 23 条深夜消息 · 最晚活跃 23:40' },
+  { k:'release', name:'青柠释怀冰',   hue:'#c9d46b', from:'给 6 件未闭环 · 下一步已写好' },
+  { k:'soft',    name:'海盐松弛冰',   hue:'#8fd0c6', from:'给 41 条周末消息 · 收回休息边界' }
+];
+const EMO_REC = STRESS>66?'sleep': STRESS>38?'release':'soft';
+
+/* ---------- 工作人格微测试（行动力 × 温度 两轴） ---------- */
+const QUIZ = [
+  { q:'周一早上看到群里 99+，你的第一反应是？',
+    a:[['逐条点开，立刻回复，受不了红点',1,0],
+       ['先标已读，攒到固定时间批量处理',0,0]] },
+  { q:'协作卡住、对方迟迟不推进时，你会？',
+    a:[['直接拉个电话，当场把路趟开',1,0],
+       ['留言说明风险，然后等对方节奏',0,0]] },
+  { q:'你发消息的习惯更接近？',
+    a:[['带表情和感叹号，怕对方觉得冷',0,1],
+       ['纯文字，把情绪都删掉',0,0]] },
+  { q:'深夜同事在群里emo，你会？',
+    a:[['陪聊一会儿，情绪比进度重要',0,1],
+       ['留一句安慰，明天再谈事',0,0]] }
+];
+const PERSONAS = {
+  captain:{ zh:'救火队长', en:'THE CAPTAIN', act:1, heat:1,
+    desc:'群里第一个冲上去的人，用火把照亮进度，也顺便点燃自己。',
+    axes:['高行动','高温度'],
+    ice:{ hue:'#e0742e', name:'柑橘琥珀冰' },
+    track:{ t:'暖流 analog nova', s:'Lo-fi Bossa · 92 BPM · 生成式环境音' },
+    chords:[[220,277.2,329.6],[174.6,220,261.6],[196,246.9,293.7],[164.8,207.7,246.9]], sweet:1 },
+  lighthouse:{ zh:'灯塔调度', en:'THE LIGHTHOUSE', act:1, heat:0,
+    desc:'冷静地把混乱排成队列，光不打闪，船就慌不了。',
+    axes:['高行动','低温度'],
+    ice:{ hue:'#6fa3c8', name:'海盐蓝冰' },
+    track:{ t:'冷雾 cool blue', s:'Cool Jazz · 76 BPM · 生成式环境音' },
+    chords:[[196,246.9,293.7],[174.6,220,261.6],[146.8,196,246.9],[164.8,207.7,246.9]], sweet:0 },
+  greenhouse:{ zh:'温室回应', en:'THE GREENHOUSE', act:0, heat:1,
+    desc:'不抢话，但每条消息都被你接得住，团队的情绪恒温器。',
+    axes:['低行动','高温度'],
+    ice:{ hue:'#d98ba0', name:'蜜糖玫瑰冰' },
+    track:{ t:'暮色 warm room', s:'Ambient Piano · 68 BPM · 生成式环境音' },
+    chords:[[261.6,329.6,392],[220,261.6,329.6],[174.6,220,261.6],[196,246.9,293.7]], sweet:1 },
+  deepsea:{ zh:'深海反刍', en:'THE DEEP SEA', act:0, heat:0,
+    desc:'安静地把问题在深处消化完，浮上来时已带着答案。',
+    axes:['低行动','低温度'],
+    ice:{ hue:'#7bb49a', name:'薄荷深绿冰' },
+    track:{ t:'下沉 weightless', s:'Deep Ambient · 54 BPM · 生成式环境音' },
+    chords:[[110,164.8,220],[98,146.8,196],[123.5,185,246.9],[110,164.8,220]], sweet:0 }
+};
+
+/* ---------- Cocktail recipe map (base × 温度) ---------- */
+const RECIPES = {
+  tequila:{ sour:{zh:'盐渍黄昏',en:'Margarita',mod:'青柠汁 · 橙皮利口酒',garnish:'盐边 · 青柠',hue:tok('--ck-margarita')},
+            sweet:{zh:'日出未满',en:'Tequila Sunrise',mod:'鲜橙汁 · 红石榴糖浆',garnish:'橙片 · 红樱桃',hue:tok('--ck-sunrise')}},
+  vodka:{ sour:{zh:'冷雾清晨',en:'Vodka Sour',mod:'柠檬汁 · 少许糖浆',garnish:'柠檬皮卷',hue:tok('--ck-vodkasour')},
+          sweet:{zh:'岸边暖流',en:'Cape Codder',mod:'蔓越莓汁 · 青柠',garnish:'蔓越莓 · 青柠',hue:tok('--ck-capecod')}},
+  gin:{ sour:{zh:'南屋绿影',en:'Southside',mod:'青柠 · 薄荷 · 糖浆',garnish:'拍打薄荷叶',hue:tok('--ck-southside')},
+        sweet:{zh:'花园低语',en:'Gin Fizz',mod:'柠檬汁 · 糖浆 · 苏打',garnish:'柠檬片 · 气泡',hue:tok('--ck-ginfizz')}},
+  rum:{ sour:{zh:'海风黛绿',en:'Daiquiri',mod:'鲜青柠汁 · 糖浆',garnish:'青柠角',hue:tok('--ck-daiquiri')},
+        sweet:{zh:'热带远航',en:'Mai Tai',mod:'橙皮酒 · 杏仁糖浆 · 青柠',garnish:'菠萝 · 薄荷',hue:tok('--ck-maitai')}},
+  whiskey:{ sour:{zh:'琥珀独白',en:'Whiskey Sour',mod:'柠檬汁 · 糖浆 · 蛋白',garnish:'橙片 · 酒渍樱桃',hue:tok('--ck-whiskeysour')},
+            sweet:{zh:'旧日良辰',en:'Old Fashioned',mod:'方糖 · 安高天娜苦精',garnish:'橙皮 · 樱桃',hue:tok('--ck-oldfashioned')}}
+};
+
+/* ---------- shared state ---------- */
+const state = { base:null, persona:null, ices:[], quizDone:false, selfTested:false, shake:0 };
+let introDone = false;
+
+/* =====================================================================
+   SCENE CONTROLLER
+   ===================================================================== */
+const scenes = ['s1','s2','s3','s4','s5'];
+const sceneNames = ['序','三部曲','基酒','冰块','尾调'];
+let current = 0, locked = false;
+const els = scenes.map(id=>$('#'+id));
+
+const rail = $('#rail');
+scenes.forEach((id,i)=>{
+  const b=document.createElement('button');
+  b.innerHTML=`<span class="rlabel">${sceneNames[i]}</span><span class="rdot"></span>`;
+  b.addEventListener('click',()=>{ if(canEnter(i)) go(i); });
+  rail.appendChild(b);
+});
+const railBtns=[...rail.children];
+
+function canEnter(i){
+  if(i<=current) return true;
+  if(i===3 && !state.base) return false;
+  if(i===4 && (state.shake<100 || !state.ices.length)) return false;
+  return i===current+1;
+}
+
+function go(i){
+  if(locked||i===current||i<0||i>=scenes.length) return;
+  if(!introDone) return;
+  locked=true;
+  const prev=els[current], next=els[i];
+  onLeave(current);
+  if(reduceMotion){
+    prev.classList.remove('active'); next.classList.add('active');
+    current=i; syncRail(); onEnter(i); locked=false; return;
+  }
+  gsap.to(prev,{opacity:0,scale:.98,filter:'blur(6px)',duration:.6,ease:'power2.inOut',onComplete:()=>{
+    prev.classList.remove('active'); prev.style.filter='';
+  }});
+  next.classList.add('active');
+  gsap.fromTo(next,{opacity:0,scale:1.04,filter:'blur(10px)'},
+    {opacity:1,scale:1,filter:'blur(0px)',duration:.9,ease:'power2.out',delay:.25,onComplete:()=>{
+      next.style.filter=''; locked=false;
+    }});
+  gsap.fromTo('#grain',{opacity:.28},{opacity:parseFloat(tok('--grain-opacity'))||.10,duration:.8,ease:'power2.out',
+    onComplete:()=>{$('#grain').style.opacity='';}});
+  current=i; syncRail(); onEnter(i);
+}
+function syncRail(){ railBtns.forEach((b,i)=>{
+  b.classList.toggle('active',i===current);
+  b.disabled=!canEnter(i)&&i>current;
+});}
+
+function onEnter(i){
+  if(i===0) dust.start();
+  if(i===3) enterIceScene();
+  if(i===4) buildReveal();
+}
+function onLeave(i){
+  if(i===0) dust.stop();
+  if(i===2) graph.stop();
+  if(i===3){ shaker.stop(); mix.stop(); }
+  if(i===4) ambient.stop();
+}
+
+/* nav inputs */
+$('#enterBtn').addEventListener('click',()=>go(1));
+$('#startBtn').addEventListener('click',()=>go(2));
+document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.nav)));
+$('#toIce').addEventListener('click',()=>{ if(state.base) go(3); });
+
+let wheelLock=false;
+window.addEventListener('wheel',e=>{
+  if(!introDone) return;
+  if(current===2 && e.target.closest('.grid2')) return;
+  if(current===3 && e.target.closest('.grid2')) return;
+  if(current===4 && e.target.closest('.info')) return;
+  if(wheelLock||locked) return;
+  if(Math.abs(e.deltaY)<24) return;
+  wheelLock=true; setTimeout(()=>wheelLock=false,900);
+  const dir=e.deltaY>0?1:-1, tgt=current+dir;
+  if(dir>0 && !canEnter(tgt)) { nudgeGate(); return; }
+  go(tgt);
+},{passive:true});
+
+window.addEventListener('keydown',e=>{
+  if(!introDone) return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){ if(canEnter(current+1)) go(current+1); else nudgeGate(); }
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){ go(current-1); }
+});
+
+function nudgeGate(){
+  const el = current===2 ? $('#toIce') : current===3 ? $('#coverBtn') : null;
+  if(el && !reduceMotion) gsap.fromTo(el,{x:-6},{x:0,duration:.4,ease:'elastic.out(1,0.4)'});
+}
+
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* =====================================================================
+   GRAIN
+   ===================================================================== */
+(function grain(){
+  const c=document.createElement('canvas'); c.width=c.height=180;
+  const g=c.getContext('2d'); const img=g.createImageData(180,180);
+  for(let i=0;i<img.data.length;i+=4){ const v=Math.random()*255;
+    img.data[i]=img.data[i+1]=img.data[i+2]=v; img.data[i+3]=255; }
+  g.putImageData(img,0,0);
+  $('#grain').style.backgroundImage=`url(${c.toDataURL()})`;
+  if(reduceMotion) return;
+  setInterval(()=>{ $('#grain').style.backgroundPosition=
+    `${(Math.random()*180)|0}px ${(Math.random()*180)|0}px`; },90);
+})();
+
+/* =====================================================================
+   P2 — dust motes
+   ===================================================================== */
+const dust=(()=>{
+  const cv=$('#dustCanvas'),ctx=cv.getContext('2d');
+  let W,H,raf,parts=[];
+  function size(){ W=cv.width=cv.clientWidth*devicePixelRatio; H=cv.height=cv.clientHeight*devicePixelRatio; }
+  function init(){ parts=[]; const n=reduceMotion?24:70;
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,
+      r:(Math.random()*1.6+.4)*devicePixelRatio,sp:Math.random()*.3+.05,
+      a:Math.random()*.5+.1,drift:Math.random()*.4-.2}); }
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of parts){
+      p.y-=p.sp*devicePixelRatio; p.x+=p.drift*.4;
+      if(p.y<-4){p.y=H+4;p.x=Math.random()*W;}
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7);
+      ctx.fillStyle=`rgba(228,196,132,${p.a})`; ctx.shadowBlur=8*devicePixelRatio;
+      ctx.shadowColor='rgba(200,145,47,.6)'; ctx.fill();
+    }
+    ctx.shadowBlur=0;
+    if(!reduceMotion) raf=requestAnimationFrame(frame);
+  }
+  return{ start(){ size();init();cancelAnimationFrame(raf);frame(); },
+          stop(){ cancelAnimationFrame(raf); } };
+})();
+window.addEventListener('resize',()=>{ if(current===0) dust.start(); });
+
+/* =====================================================================
+   P4 — relationship graph (light force sim)
+   ===================================================================== */
+const graph=(()=>{
+  const cv=$('#graphCanvas'),ctx=cv.getContext('2d'),tip=$('#graphTip');
+  let W,H,raf,nodes=[],edges=[],hover=null,started=false,t0;
+  function size(){ const r=cv.getBoundingClientRect();
+    cv.width=r.width*devicePixelRatio; cv.height=r.height*devicePixelRatio;
+    W=cv.width;H=cv.height; }
+  function build(){
+    nodes=[];edges=[];
+    const cx=W/2,cy=H/2;
+    nodes.push({id:0,name:DINGTALK.me.name,role:DINGTALK.me.role,me:true,x:cx,y:cy,vx:0,vy:0,r:20*devicePixelRatio});
+    DINGTALK.contacts.forEach((c,i)=>{
+      const ang=(i/DINGTALK.contacts.length)*Math.PI*2;
+      const rad=Math.min(W,H)*0.32;
+      nodes.push({id:i+1,name:c.name,role:c.role,weight:c.weight,warmth:c.warmth,
+        x:cx+Math.cos(ang)*rad*(0.7+Math.random()*.4),
+        y:cy+Math.sin(ang)*rad*(0.7+Math.random()*.4),vx:0,vy:0,
+        r:(6+c.weight*1.1)*devicePixelRatio, event:c.warmth<=3});
+      edges.push({a:0,b:i+1,w:c.weight});
+    });
+    edges.push({a:1,b:5,w:3},{a:2,b:6,w:2},{a:3,b:8,w:4},{a:4,b:1,w:3});
+  }
+  function step(){
+    const cx=W/2,cy=H/2;
+    for(let i=0;i<nodes.length;i++){
+      const n=nodes[i]; if(n.me) continue;
+      for(let j=0;j<nodes.length;j++){ if(i===j)continue; const m=nodes[j];
+        let dx=n.x-m.x,dy=n.y-m.y,d2=dx*dx+dy*dy+.01,d=Math.sqrt(d2);
+        const f=(4200*devicePixelRatio*devicePixelRatio)/d2; n.vx+=dx/d*f; n.vy+=dy/d*f; }
+      n.vx+=(cx-n.x)*0.0016; n.vy+=(cy-n.y)*0.0016;
+    }
+    edges.forEach(e=>{ const a=nodes[e.a],b=nodes[e.b];
+      let dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+      const target=(120+(10-e.w)*10)*devicePixelRatio;
+      const f=(d-target)*0.008;
+      const fx=dx/d*f,fy=dy/d*f;
+      if(!a.me){a.vx+=fx;a.vy+=fy;} if(!b.me){b.vx-=fx;b.vy-=fy;}
+    });
+    nodes.forEach(n=>{ if(n.me)return; n.vx*=0.86;n.vy*=0.86; n.x+=n.vx*0.16;n.y+=n.vy*0.16;
+      n.x=clamp(n.x,n.r,W-n.r); n.y=clamp(n.y,n.r,H-n.r); });
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const pulse=(Math.sin((performance.now()-t0)/900)+1)/2;
+    edges.forEach(e=>{ const a=nodes[e.a],b=nodes[e.b];
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+      const hot=nodes[e.b].event||nodes[e.a].event;
+      ctx.strokeStyle=hot?`rgba(143,47,40,${.18+e.w*.03})`:`rgba(240,227,208,${.06+e.w*.02})`;
+      ctx.lineWidth=(e.w*.18)*devicePixelRatio; ctx.stroke();
+    });
+    nodes.forEach(n=>{
+      if(n.me){
+        const g=ctx.createRadialGradient(n.x,n.y,2,n.x,n.y,n.r*2.4);
+        g.addColorStop(0,'rgba(200,145,47,.9)'); g.addColorStop(1,'rgba(200,145,47,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(n.x,n.y,n.r*2.4,0,7); ctx.fill();
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,7); ctx.fillStyle=C.hi; ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.r*(hover===n?1.25:1),0,7);
+        ctx.fillStyle=n.event?'rgba(160,64,54,.92)':'rgba(232,222,204,.86)';
+        if(hover===n){ctx.shadowBlur=16*devicePixelRatio;ctx.shadowColor=n.event?C.accent:C.amber;}
+        ctx.fill(); ctx.shadowBlur=0;
+        if(n.event){ ctx.beginPath();ctx.arc(n.x,n.y,n.r+(3+pulse*3)*devicePixelRatio,0,7);
+          ctx.strokeStyle=`rgba(160,64,54,${.4-pulse*.3})`;ctx.lineWidth=1.5*devicePixelRatio;ctx.stroke(); }
+      }
+      if(n.me||n.r>9*devicePixelRatio||hover===n){
+        ctx.font=`${(n.me?12:11)*devicePixelRatio}px Inter, "Noto Sans SC", sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        if(n.me){ctx.fillStyle=C.ink;ctx.fillText(n.name,n.x,n.y);}
+        else{ctx.fillStyle='rgba(240,227,208,.82)';ctx.fillText(n.name,n.x,n.y-n.r-8*devicePixelRatio);}
+      }
+    });
+  }
+  function frame(){ step();draw(); if(!reduceMotion) raf=requestAnimationFrame(frame); }
+  function onMove(e){
+    const r=cv.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*devicePixelRatio,my=(e.clientY-r.top)*devicePixelRatio;
+    hover=null;
+    for(const n of nodes){ if(n.me)continue;
+      if(Math.hypot(n.x-mx,n.y-my)<n.r+8*devicePixelRatio){hover=n;break;} }
+    if(hover){ tip.style.opacity=1; tip.style.left=(hover.x/devicePixelRatio)+'px';
+      tip.style.top=(hover.y/devicePixelRatio)+'px';
+      tip.innerHTML=`<b>${hover.name}</b> · ${hover.role}<br>
+        <small>${hover.event?'⚠ 高压来源 · 亲密度低':'亲密协作 · 亲密度 '+hover.warmth+'/10'}</small>`;
+      cv.style.cursor='pointer';
+    } else { tip.style.opacity=0; cv.style.cursor='default'; }
+  }
+  return{ start(){ if(!started){ size(); build(); started=true;
+            cv.addEventListener('mousemove',onMove);
+            cv.addEventListener('mouseleave',()=>{hover=null;tip.style.opacity=0;});
+          } t0=performance.now(); cancelAnimationFrame(raf); frame();
+          if(reduceMotion){for(let k=0;k<160;k++)step();draw();} },
+          stop(){ cancelAnimationFrame(raf); } };
+})();
+
+/* =====================================================================
+   P4 — 分析流程：因子 → 焦虑指数 → 烈度 → 推荐基酒
+   ===================================================================== */
+const factorList=$('#factorList');
+FACTORS.forEach(f=>{
+  const d=document.createElement('div'); d.className='factor'+(f.neg?' neg':'');
+  const pts=Math.round(f.score*f.w);
+  d.innerHTML=`<div class="top"><span>${f.label}</span><b>${f.neg?'−'+Math.abs(pts):'+'+pts}</b></div>
+    <div class="bar"><i></i></div>
+    <div class="fd">${f.detail} · 权重 ${Math.round(f.w*100)}%</div>`;
+  factorList.appendChild(d);
+});
+
+let analyzed=false;
+$('#analyzeBtn').addEventListener('click',()=>{
+  if(analyzed) return; analyzed=true;
+  const btn=$('#analyzeBtn'); btn.disabled=true;
+  btn.innerHTML='分析完成 · 已蒸馏本周 IM';
+  graph.start();
+  gsap.fromTo('.factor',{opacity:0,x:-10},{opacity:1,x:0,duration:.5,stagger:.1,ease:'power2.out'});
+  gsap.fromTo(factorList.querySelectorAll('.bar i'),{width:'0%'},
+    {width:i=>Math.abs(FACTORS[i].score)+'%',duration:.9,stagger:.1,delay:.15,ease:'power2.out'});
+  animateStress();
+});
+
+function animateStress(){
+  const arc=$('#gaugeArc'),CC=326.7;
+  $('#stressLvl').textContent = STRESS>66?'偏高':STRESS>38?'中等':'平稳';
+  $('#stressNote').innerHTML = STRESS>66
+    ? `本周 <b>23 条深夜消息</b>、<b>6 件未闭环</b>与一次 26 小时的等待叠加——这杯需要更高烈度撑住场面。`
+    : STRESS>38
+    ? `节奏中等：卡点不多但悬而未决。留一线锐利，收个清醒的尾。`
+    : `难得平稳的一周，被善意包围。放一杯轻盈明快的酒。`;
+  const obj={v:0};
+  gsap.to(obj,{v:STRESS,duration:1.6,ease:'power2.out',delay:.7,onUpdate:()=>{
+    $('#stressNum').textContent=Math.round(obj.v);
+    arc.style.strokeDashoffset=CC-(CC*obj.v/100);
+    arc.style.stroke = obj.v>66?'var(--seed-accent)':'var(--amber)';
+  },onComplete:showProof});
+}
+function showProof(){
+  const segs=$('#proofMeter').children;
+  for(let i=0;i<5;i++) setTimeout(()=>segs[i].classList.toggle('on',i<PROOF), i*120);
+  $('#proofNum').textContent=PROOF;
+  const recKey=Object.keys(SPIRITS).find(k=>SPIRITS[k].proof===PROOF);
+  const rec=SPIRITS[recKey];
+  $('#proofTxt').innerHTML=`焦虑指数 <b>${STRESS}</b> → 烈度 Lv.${PROOF} · 推荐 <b>${rec.zh}</b>`;
+  const card=document.querySelector(`.spirit[data-k="${recKey}"]`);
+  if(card) card.classList.add('rec');
+  $('#spiritNote').innerHTML=`焦虑指数 ${STRESS} · 烈度 Lv.${PROOF} —— <b>${rec.zh}</b> 撑得住这一天。也可以另选一支。`;
+}
+
+/* spirit cards */
+const bottleSVG=(hue)=>`<svg class="bottle" viewBox="0 0 26 44" fill="none">
+  <path d="M10 3h6v6l2 4v27a2 2 0 01-2 2H10a2 2 0 01-2-2V13l2-4V3z" stroke="${hue}" stroke-width="1.2"/>
+  <rect x="8" y="24" width="10" height="14" rx="1.5" fill="${hue}" opacity="0.28"/>
+  <path d="M11 3h4" stroke="${hue}" stroke-width="1.2"/></svg>`;
+const cardsWrap=$('#spiritCards');
+Object.entries(SPIRITS).forEach(([key,s])=>{
+  const el=document.createElement('div'); el.className='spirit'; el.dataset.k=key;
+  el.innerHTML=`${bottleSVG(s.hue)}<div class="tx"><div class="zh">${s.zh}</div><div class="en">${s.en}</div>
+    <div class="stats">烈度 ${'●'.repeat(s.proof)}${'○'.repeat(5-s.proof)} · 苦涩 ${s.bitter}/5 · ${s.abv}</div></div>
+    <span class="rec-badge">为你推荐</span>`;
+  el.addEventListener('mouseenter',()=>{ $('#spiritNote').innerHTML=s.note; });
+  el.addEventListener('click',()=>{
+    state.base=key;
+    document.querySelectorAll('.spirit').forEach(x=>x.classList.remove('sel'));
+    el.classList.add('sel');
+    $('#spiritNote').innerHTML=s.note;
+    $('#toIce').disabled=false;
+    if(!reduceMotion) gsap.fromTo('#toIce',{scale:.96},{scale:1,duration:.5,ease:'back.out(2)'});
+    syncRail();
+  });
+  cardsWrap.appendChild(el);
+});
+
+/* =====================================================================
+   P5 — 人格测试 / 冰块拖拽 / 摇匀
+   ===================================================================== */
+const quizBox=$('#quizBox');
+const ans={act:0,heat:0};
+
+/* IM 工作风格扫描：用数据先预测人格底色 */
+let scanPlayed=false;
+function playScan(){
+  if(scanPlayed) return; scanPlayed=true;
+  const bars=$('#scanBars'); bars.innerHTML='';
+  BEHAVIOR.forEach(b=>{
+    const d=document.createElement('div'); d.className='brow';
+    d.innerHTML=`<div class="bt"><span>${b.l}</span><b>${b.label}</b><span>${b.r}</span></div>
+      <div class="bi"><i style="left:50%"></i></div><div class="bn">${b.note}</div>`;
+    bars.appendChild(d);
+  });
+  const rows=[...bars.children];
+  if(reduceMotion){
+    rows.forEach((r,i)=>{ r.style.opacity=1; r.querySelector('.bi i').style.left=BEHAVIOR[i].v+'%'; });
+    showScanResult(); return;
+  }
+  const tl=gsap.timeline();
+  tl.to(rows,{opacity:1,duration:.4,stagger:.14});
+  rows.forEach((r,i)=>tl.to(r.querySelector('.bi i'),
+    {left:BEHAVIOR[i].v+'%',duration:.7,ease:'power2.out'}, .3+i*.16));
+  tl.call(showScanResult,null,'+=.2');
+}
+function showScanResult(){
+  const PP=PERSONAS[predictPersona()];
+  const emo=EMO_ICES.find(e=>e.k===EMO_REC);
+  $('#scanResult').innerHTML=
+    `数据预测 · 你的底色是 <b>${PP.zh}</b> → 推荐底色冰 <b>${PP.ice.name}</b><br>
+     本周情绪冰 → <b>${emo.name}</b>（${emo.from}）`;
+  if(!reduceMotion) gsap.fromTo('#scanResult',{opacity:0,y:8},{opacity:1,y:0,duration:.5});
+}
+
+/* 自测入口：数据已预测，答题只做自我校准（可跳过） */
+function renderQuizEntry(){
+  quizBox.innerHTML=`<div class="q-idx">自我校准 · 可选</div>
+    <div class="q-t">数据已经预测了你的底色。<br>要不要再用 4 道题，亲自确认？</div>
+    <button class="quiz-opt" id="quizStartBtn">答一下 · 4 道快题</button>
+    <button class="quiz-opt" id="quizSkipBtn">跳过 · 直接采用数据预测</button>`;
+  $('#quizStartBtn').addEventListener('click',()=>{
+    const swap=()=>{ renderQuiz(0);
+      if(!reduceMotion) gsap.fromTo(quizBox,{opacity:0,x:16},{opacity:1,x:0,duration:.3,ease:'power2.out'}); };
+    if(reduceMotion) swap();
+    else gsap.to(quizBox,{opacity:0,x:-16,duration:.22,ease:'power2.in',onComplete:swap});
+  });
+  $('#quizSkipBtn').addEventListener('click',()=>adoptPredicted());
+}
+function adoptPredicted(){
+  state.quizDone=true; state.selfTested=false;
+  state.persona=predictPersona();
+  showPersonaCard('数据预测');
+}
+function renderQuiz(i){
+  const q=QUIZ[i];
+  quizBox.innerHTML=`<div class="q-idx">工作人格微测试 · Q${i+1} / ${QUIZ.length}</div>
+    <div class="q-t">${q.q}</div>`+
+    q.a.map((o,k)=>`<button class="quiz-opt" data-k="${k}">${o[0]}</button>`).join('');
+  quizBox.querySelectorAll('.quiz-opt').forEach(b=>b.addEventListener('click',()=>{
+    const o=q.a[+b.dataset.k]; ans.act+=o[1]; ans.heat+=o[2];
+    if(i<QUIZ.length-1){
+      gsap.to(quizBox,{opacity:0,x:-16,duration:.22,ease:'power2.in',onComplete:()=>{
+        renderQuiz(i+1);
+        gsap.fromTo(quizBox,{opacity:0,x:16},{opacity:1,x:0,duration:.3,ease:'power2.out'});
+      }});
+    } else finishQuiz();
+  }));
+}
+function finishQuiz(){
+  state.quizDone=true; state.selfTested=true;
+  const act=ans.act>=1, heat=ans.heat>=1;
+  state.persona = act&&heat?'captain': act?'lighthouse': heat?'greenhouse':'deepsea';
+  const pred=predictPersona();
+  showPersonaCard(state.persona===pred?'自测与数据一致':`数据预测 ${PERSONAS[pred].zh} · 采用你的自测`);
+}
+function showPersonaCard(tag){
+  const P=PERSONAS[state.persona];
+  quizBox.hidden=true;
+  const pc=$('#personaCard'); pc.hidden=false;
+  pc.innerHTML=`<div class="p-en">${P.en} · 工作人格</div><div class="p-zh">${P.zh}</div>
+    <div class="p-desc">${P.desc}</div>
+    <div class="p-axes">${P.axes.map(a=>`<span>${a}</span>`).join('')}<span>${tag}</span></div>`;
+  gsap.fromTo(pc,{opacity:0,y:14},{opacity:1,y:0,duration:.6,ease:'power2.out'});
+  const tb=$('#trayBlock'); tb.hidden=false;
+  gsap.fromTo(tb,{opacity:0,y:14},{opacity:1,y:0,duration:.6,delay:.2});
+  buildTray();
+}
+
+function buildTray(){
+  const tray=$('#iceTray'); tray.innerHTML='';
+  const pred=predictPersona();
+  Object.entries(PERSONAS).forEach(([k,p])=>{
+    const d=document.createElement('div');
+    d.className='ice'+(k===pred?' pred':''); d.dataset.k=k;
+    let tag='';
+    if(k===pred) tag='<span class="icetag">数据预测</span>';
+    else if(state.selfTested&&k===state.persona) tag='<span class="icetag self">自测</span>';
+    d.innerHTML=`<span class="cube" style="--h:${p.ice.hue}"></span><span class="lbl">${p.ice.name}</span>${tag}`;
+    d.addEventListener('pointerdown',e=>startIceDrag(e,{type:'persona',k,hue:p.ice.hue,name:p.ice.name}));
+    tray.appendChild(d);
+  });
+  const sub=document.createElement('div'); sub.className='tray-sub';
+  sub.textContent='情绪冰 · 来自本周 IM 数据';
+  tray.appendChild(sub);
+  EMO_ICES.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='ice'+(m.k===EMO_REC?' pred':''); d.dataset.k=m.k;
+    d.innerHTML=`<span class="cube" style="--h:${m.hue}"></span><span class="lbl">${m.name}</span>
+      ${m.k===EMO_REC?'<span class="icetag">本周情绪</span>':''}`;
+    d.addEventListener('pointerdown',e=>startIceDrag(e,{type:'emo',k:m.k,hue:m.hue,name:m.name,from:m.from}));
+    tray.appendChild(d);
+  });
+}
+function startIceDrag(e,item){
+  if(state.ices.length>=2 || state.ices.some(x=>x.k===item.k)) return;
+  e.preventDefault();
+  const ghost=document.createElement('div'); ghost.className='ice-ghost';
+  ghost.style.background=`linear-gradient(135deg, color-mix(in srgb,${item.hue} 72%,#fff 14%), color-mix(in srgb,${item.hue} 55%,#000 12%))`;
+  ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+  document.body.appendChild(ghost);
+  const move=ev=>{ ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; };
+  const up=ev=>{
+    window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up);
+    const r=$('#mixGlass').getBoundingClientRect();
+    const inside=ev.clientX>r.left&&ev.clientX<r.right&&ev.clientY>r.top&&ev.clientY<r.bottom;
+    ghost.remove();
+    if(inside) dropIce(item);
+  };
+  window.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
+}
+function dropIce(item){
+  state.ices.push(item);
+  const el=document.querySelector(`.ice[data-k="${item.k}"]`); if(el) el.classList.add('dropped');
+  mix.drop(item.hue);
+  if(state.ices.length>=2) $('#trayBlock').classList.add('locked');
+  $('#coverBtn').disabled=false;
+  toast(state.ices.length===1
+    ? `${item.name} 入杯 · 还能再加一块（底色 + 情绪）`
+    : `${item.name} 入杯 · 可以扣壶摇匀了`);
+  syncRail();
+}
+
+/* mixing glass canvas */
+const mix=(()=>{
+  const cv=$('#mixGlass'),ctx=cv.getContext('2d');
+  let W,H,raf,ices=[],splash=0;
+  function size(){ W=cv.width=340*devicePixelRatio; H=cv.height=400*devicePixelRatio;
+    cv.style.width='340px'; cv.style.height='400px'; }
+  function drop(hue){ ices.push({hue,y:-60*devicePixelRatio,v:0,settled:false}); splash=1; }
+  function reset(){ ices=[]; }
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2, gw=150*devicePixelRatio, gh=170*devicePixelRatio, gy=H*0.66, topY=gy-gh;
+    const s=SPIRITS[state.base];
+    const liqH=gh*0.62, liqTop=gy-liqH;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(cx-gw/2+4,topY,gw-8,gh); ctx.clip();
+    ctx.fillStyle=s?s.hue:C.amber; ctx.globalAlpha=.5;
+    const wave=Math.sin(performance.now()/300)*2*devicePixelRatio;
+    ctx.fillRect(cx-gw/2,liqTop+wave,gw,liqH); ctx.globalAlpha=1;
+    if(ices.length){
+      if(splash>0){ splash-=0.03;
+        for(let i=0;i<3;i++){ ctx.beginPath();
+          ctx.arc(cx+(Math.random()-.5)*gw*.8, liqTop-Math.random()*22*devicePixelRatio,
+            1.6*devicePixelRatio,0,7);
+          ctx.fillStyle=`rgba(240,240,255,${Math.max(splash,0)*.6})`; ctx.fill(); } }
+      ices.forEach((ice,idx)=>{
+        const target=liqTop+(14+idx*24)*devicePixelRatio;
+        if(!ice.settled){ ice.v+=0.5*devicePixelRatio; ice.y+=ice.v;
+          if(ice.y>=target){ ice.y=target; ice.v*=-0.35; splash=1;
+            if(Math.abs(ice.v)<1*devicePixelRatio){ice.settled=true;ice.v=0;} } }
+        const off=(idx-(ices.length-1)/2)*34*devicePixelRatio;
+        const bob=ice.settled?Math.sin(performance.now()/500+idx*1.7)*2*devicePixelRatio:0;
+        const s2=30*devicePixelRatio;
+        ctx.save(); ctx.translate(cx+off, ice.y+bob+s2/2); ctx.rotate(.14+idx*.18);
+        ctx.globalAlpha=.85; ctx.fillStyle=ice.hue;
+        ctx.fillRect(-s2/2,-s2/2,s2,s2);
+        ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1.2*devicePixelRatio;
+        ctx.strokeRect(-s2/2,-s2/2,s2,s2);
+        ctx.globalAlpha=.5; ctx.fillStyle='#fff';
+        ctx.fillRect(-s2/2+4*devicePixelRatio,-s2/2+4*devicePixelRatio,s2*.3,s2*.18);
+        ctx.restore(); ctx.globalAlpha=1;
+      });
+    }
+    ctx.restore();
+    ctx.strokeStyle='rgba(240,227,208,.85)'; ctx.lineWidth=2*devicePixelRatio;
+    ctx.beginPath();
+    ctx.moveTo(cx-gw/2,topY); ctx.lineTo(cx-gw/2+6*devicePixelRatio,gy);
+    ctx.lineTo(cx+gw/2-6*devicePixelRatio,gy); ctx.lineTo(cx+gw/2,topY);
+    ctx.stroke();
+    ctx.strokeStyle='rgba(233,200,119,.5)'; ctx.lineWidth=1*devicePixelRatio;
+    ctx.beginPath(); ctx.moveTo(cx-gw/2,topY); ctx.lineTo(cx+gw/2,topY); ctx.stroke();
+    if(!reduceMotion) raf=requestAnimationFrame(frame);
+  }
+  return{ size, drop, reset,
+    start(){ cancelAnimationFrame(raf); frame(); },
+    stop(){ cancelAnimationFrame(raf); } };
+})();
+
+function enterIceScene(){
+  mix.size(); mix.start();
+  playScan();
+  if(!state.quizDone && quizBox.innerHTML==='') renderQuizEntry();
+}
+
+/* cover & shake */
+$('#coverBtn').addEventListener('click',()=>{
+  mix.stop();
+  $('#trayBlock').classList.add('locked');
+  gsap.to('#mixGlass',{opacity:0,duration:.4});
+  const sh=$('#shakeStage'); sh.hidden=false;
+  gsap.fromTo(sh,{opacity:0},{opacity:1,duration:.4});
+  $('#coverBtn').hidden=true;
+  $('#shakeInstr').hidden=false; $('#shakeBarWrap').hidden=false; $('#shakePct').hidden=false;
+  shaker.start();
+});
+
+const shaker=(()=>{
+  const cv=$('#shakeStage'),ctx=cv.getContext('2d');
+  let W,H,raf,angle=0,vel=0,energy=0,lastY=null,started=false,ice=[];
+  function size(){ W=cv.width=340*devicePixelRatio; H=cv.height=400*devicePixelRatio;
+    cv.style.width='340px'; cv.style.height='400px'; }
+  function init(){ ice=[]; for(let i=0;i<3;i++) ice.push({x:(Math.random()-.5)*40,y:-20+i*22,rot:Math.random()*6}); }
+  function addEnergy(a){ energy=clamp(energy+a,0,1.4); vel+=a*0.6*(Math.random()>.5?1:-1);
+    state.shake=clamp(state.shake + a*26,0,100); updateBar(); }
+  function updateBar(){ $('#shakeFill').style.width=state.shake+'%';
+    $('#shakePct').textContent=Math.round(state.shake)+'%';
+    if(state.shake>=100 && !cv.dataset.done){ cv.dataset.done='1'; complete(); } }
+  function complete(){
+    $('#shakeInstr').innerHTML='摇匀了 · <b>正在滤入杯中…</b>';
+    syncRail();
+    if(!reduceMotion) gsap.to({}, {duration:.9, onComplete:()=>go(4)});
+    else go(4);
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    vel*=0.9; angle+=vel; angle*=0.86; energy*=0.965;
+    const cx=W/2,cy=H*0.46;
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle*0.5);
+    const w=90*devicePixelRatio,h=200*devicePixelRatio;
+    const grad=ctx.createLinearGradient(-w/2,0,w/2,0);
+    grad.addColorStop(0,C.tinA);grad.addColorStop(.5,C.amber);grad.addColorStop(1,C.tinB);
+    ctx.beginPath();
+    ctx.moveTo(-w/2,-h/2); ctx.lineTo(w/2,-h/2);
+    ctx.lineTo(w*0.36,h/2); ctx.lineTo(-w*0.36,h/2); ctx.closePath();
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.strokeStyle='rgba(240,227,208,.25)';ctx.lineWidth=1.4*devicePixelRatio;ctx.stroke();
+    ctx.fillStyle=C.hi;
+    ctx.fillRect(-w*0.44,-h/2-18*devicePixelRatio,w*0.88,20*devicePixelRatio);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-w/2+6,-h/2+6); ctx.lineTo(w/2-6,-h/2+6);
+    ctx.lineTo(w*0.36-6,h/2-6); ctx.lineTo(-w*0.36+6,h/2-6); ctx.closePath(); ctx.clip();
+    const s=SPIRITS[state.base]; ctx.fillStyle=s?s.hue:C.amber; ctx.globalAlpha=.5;
+    const wave=Math.sin(performance.now()/120)*energy*14*devicePixelRatio;
+    ctx.fillRect(-w,h*0.02+wave,w*2,h); ctx.globalAlpha=1;
+    const iceHue=state.ices.length?state.ices[0].hue:null;
+    ice.forEach((c,i)=>{ const jx=Math.sin(performance.now()/90+i)*energy*30*devicePixelRatio;
+      const jy=Math.cos(performance.now()/70+i)*energy*24*devicePixelRatio;
+      ctx.save(); ctx.translate(c.x*devicePixelRatio+jx,c.y*devicePixelRatio+jy+h*0.12);
+      ctx.rotate(c.rot+angle);
+      ctx.fillStyle=iceHue?iceHue+'66':'rgba(240,240,255,.4)';
+      ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1*devicePixelRatio;
+      const s2=17*devicePixelRatio; ctx.fillRect(-s2/2,-s2/2,s2,s2);ctx.strokeRect(-s2/2,-s2/2,s2,s2);
+      ctx.restore(); });
+    ctx.restore();
+    ctx.restore();
+    if(energy>0.5){ for(let i=0;i<2;i++){ ctx.beginPath();
+      ctx.arc(cx+(Math.random()-.5)*w*1.4,cy+h/2+Math.random()*40*devicePixelRatio,1.5*devicePixelRatio,0,7);
+      ctx.fillStyle='rgba(220,235,255,.5)';ctx.fill(); } }
+    if(!reduceMotion) raf=requestAnimationFrame(draw);
+  }
+  cv.addEventListener('pointerdown',e=>{cv.classList.add('grab');lastY=e.clientY;cv.setPointerCapture(e.pointerId);addEnergy(.12);});
+  cv.addEventListener('pointermove',e=>{ if(lastY!==null){ const dy=Math.abs(e.clientY-lastY);
+    if(dy>4){ addEnergy(clamp(dy/120,.02,.22)); lastY=e.clientY; } }});
+  window.addEventListener('pointerup',()=>{cv.classList.remove('grab');lastY=null;});
+  cv.addEventListener('click',()=>addEnergy(.14));
+  return{ start(){ size(); if(!started){init();started=true;} cancelAnimationFrame(raf); draw();
+            if(reduceMotion){ $('#shakeInstr').innerHTML='点击酒壶继续摇匀'; } },
+          stop(){ cancelAnimationFrame(raf); } };
+})();
+
+/* =====================================================================
+   P6 — reveal：特调 / 音乐 / 待办
+   ===================================================================== */
+function pickRecipe(){
+  const P=PERSONAS[state.persona];
+  const bal=P.sweet?'sweet':'sour';
+  return { r:RECIPES[state.base][bal], bal, spirit:SPIRITS[state.base], P };
+}
+function poemFor(){
+  const s=SPIRITS[state.base], P=PERSONAS[state.persona];
+  if(STRESS>66) return `这一周，你在 <span class="dim">深夜消息</span> 与 <span class="dim">未闭环</span> 里辗转，<br>如今以 <b>${s.zh}</b> 压阵、<b>${P.ice.name}</b> 镇场——<br>先抚慰，再沉底。剩下的，明天再说。`;
+  if(STRESS>38) return `节奏不快不慢的一周，你稳稳接住了它。<br>以 <b>${s.zh}</b> 为底，<b>${P.ice.name}</b> 留一线清醒，<br>敬那个没有慌乱的自己。`;
+  return `难得松弛的一周，被善意包围。<br>这杯 <b>${s.zh}</b> 轻盈明快，<b>${P.ice.name}</b> 叮当作响，<br>像今晚不必设的闹钟。`;
+}
+function buildReveal(){
+  const {r,spirit,P}=pickRecipe();
+  const pIce=state.ices.find(x=>x.type==='persona');
+  const eIce=state.ices.find(x=>x.type==='emo');
+  $('#ckName').textContent=r.zh;
+  $('#ckEn').textContent=r.en+' · '+P.en;
+  $('#ckRecipe').innerHTML=`
+    <div class="row"><div class="k">Base 基酒</div><div class="v">${spirit.zh} · 烈度 Lv.${spirit.proof}</div></div>
+    <div class="row"><div class="k">Ice 底色冰</div><div class="v">${pIce?pIce.name:P.ice.name} · ${P.zh}</div></div>
+    ${eIce?`<div class="row"><div class="k">Mood 情绪冰</div><div class="v">${eIce.name} · ${eIce.from}</div></div>`:''}
+    <div class="row"><div class="k">Modifier 调和</div><div class="v">${r.mod}</div></div>
+    <div class="row"><div class="k">Garnish 点缀</div><div class="v">${r.garnish}</div></div>`;
+  $('#ckPoem').innerHTML=poemFor();
+  $('#trackTitle').textContent=P.track.t;
+  $('#trackStyle').textContent=P.track.s;
+  buildTodos();
+  drawFinalGlass(r.hue, state.ices.length?state.ices.map(x=>x.hue):[P.ice.hue]);
+  if(!reduceMotion){
+    gsap.fromTo('#s5 .ck-name',{y:24,opacity:0},{y:0,opacity:1,duration:.9,ease:'power3.out',delay:.3});
+    gsap.fromTo('#s5 .recipe .row',{y:16,opacity:0},{y:0,opacity:1,stagger:.08,duration:.6,delay:.6});
+    gsap.fromTo('#s5 .music-card',{y:14,opacity:0},{y:0,opacity:1,duration:.6,delay:.9});
+    gsap.fromTo('#s5 .poem',{opacity:0},{opacity:1,duration:1,delay:1.1});
+    gsap.fromTo('#s5 .todo',{y:12,opacity:0},{y:0,opacity:1,stagger:.12,duration:.6,delay:1.3,clearProps:'all'});
+    gsap.fromTo('#s5 .final-actions',{y:14,opacity:0},{y:0,opacity:1,duration:.6,delay:1.7});
+  }
+}
+function buildTodos(){
+  const wrap=$('#todoList'); wrap.innerHTML='';
+  DINGTALK.loops.forEach(l=>{
+    const d=document.createElement('div'); d.className='todo';
+    d.innerHTML=`<button class="chk" aria-label="写下下一步"></button>
+      <div><div class="t-who">${l.who}</div><div class="t-next">${l.next}</div>
+      <div class="t-stuck">卡点 · ${l.stuck}</div></div>`;
+    d.querySelector('.chk').addEventListener('click',()=>{
+      d.classList.add('done');
+      toast('已写入明天 9:30 · 这条可以放下了');
+    });
+    wrap.appendChild(d);
+  });
+}
+
+/* generative ambient audio (WebAudio, no assets) */
+const ambient=(()=>{
+  let ctx=null,master=null,timer=null,step=0;
+  function ensure(){ if(ctx) return;
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    master=ctx.createGain(); master.gain.value=0; master.connect(ctx.destination); }
+  function chord(freqs,dur){
+    freqs.forEach((f,ix)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain(),flt=ctx.createBiquadFilter();
+      o.type=ix===0?'sine':'triangle'; o.frequency.value=f*(ix===0?0.5:1);
+      flt.type='lowpass'; flt.frequency.value=900;
+      g.gain.setValueAtTime(0,ctx.currentTime);
+      g.gain.linearRampToValueAtTime(.05,ctx.currentTime+1.4);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+dur);
+      o.connect(flt); flt.connect(g); g.connect(master);
+      o.start(); o.stop(ctx.currentTime+dur+.1);
+    });
+  }
+  return{
+    play(prog){ ensure(); ctx.resume();
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value,ctx.currentTime);
+      master.gain.linearRampToValueAtTime(1,ctx.currentTime+1);
+      step=0; chord(prog[0],4.4);
+      if(timer) clearInterval(timer);
+      timer=setInterval(()=>{ step=(step+1)%prog.length; chord(prog[step],4.4); },4000); },
+    stop(){ if(timer){clearInterval(timer);timer=null;}
+      if(ctx&&master){ master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value,ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0,ctx.currentTime+.6); } }
+  };
+})();
+let playing=false;
+$('#playBtn').addEventListener('click',()=>{
+  const P=PERSONAS[state.persona];
+  playing=!playing;
+  $('#musicCard').classList.toggle('playing',playing);
+  $('#icoPlay').hidden=playing; $('#icoPause').hidden=!playing;
+  if(playing) ambient.play(P.chords); else ambient.stop();
+});
+
+function drawFinalGlass(hue,iceHues){
+  const cv=$('#finalGlass'),ctx=cv.getContext('2d');
+  cv.width=300*devicePixelRatio;cv.height=400*devicePixelRatio;
+  cv.style.width='300px';cv.style.height='400px';
+  let fill=0; const target=1;
+  function render(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const cx=cv.width/2, topY=90*devicePixelRatio, w=150*devicePixelRatio, bowlH=150*devicePixelRatio;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx-w,topY); ctx.lineTo(cx+w,topY); ctx.lineTo(cx,topY+bowlH); ctx.closePath();
+    ctx.clip();
+    const liqTop = topY+bowlH-(bowlH*fill);
+    ctx.fillStyle=hue; ctx.globalAlpha=.9;
+    ctx.fillRect(cx-w,liqTop,w*2,bowlH);
+    ctx.globalAlpha=.35;ctx.fillStyle='rgba(255,255,255,1)';
+    ctx.fillRect(cx-w,liqTop,w*2,3*devicePixelRatio);
+    if(fill>0.55&&iceHues.length){
+      iceHues.forEach((ih,ix)=>{
+        const s2=26*devicePixelRatio, iy=liqTop+18*devicePixelRatio;
+        const ox=(ix-(iceHues.length-1)/2)*36*devicePixelRatio;
+        ctx.save(); ctx.translate(cx+ox, iy); ctx.rotate(.2+ix*.22);
+        ctx.globalAlpha=.9; ctx.fillStyle=ih;
+        ctx.fillRect(-s2/2,-s2/2,s2,s2);
+        ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=1.2*devicePixelRatio;
+        ctx.strokeRect(-s2/2,-s2/2,s2,s2);
+        ctx.restore();
+      });
+    }
+    ctx.globalAlpha=1; ctx.restore();
+    ctx.strokeStyle='rgba(240,227,208,.85)';ctx.lineWidth=2*devicePixelRatio;
+    ctx.beginPath();
+    ctx.moveTo(cx-w,topY); ctx.lineTo(cx+w,topY);
+    ctx.lineTo(cx+6*devicePixelRatio,topY+bowlH+4*devicePixelRatio);
+    ctx.lineTo(cx+6*devicePixelRatio,topY+bowlH+150*devicePixelRatio);
+    ctx.moveTo(cx-6*devicePixelRatio,topY+bowlH+150*devicePixelRatio);
+    ctx.lineTo(cx-6*devicePixelRatio,topY+bowlH+4*devicePixelRatio);
+    ctx.lineTo(cx-w,topY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx-52*devicePixelRatio,topY+bowlH+150*devicePixelRatio);
+    ctx.lineTo(cx+52*devicePixelRatio,topY+bowlH+150*devicePixelRatio);
+    ctx.stroke();
+    ctx.strokeStyle='rgba(233,200,119,.6)';ctx.lineWidth=1*devicePixelRatio;
+    ctx.beginPath();ctx.moveTo(cx-w,topY);ctx.lineTo(cx+w,topY);ctx.stroke();
+    ctx.strokeStyle='rgba(240,227,208,.7)';ctx.lineWidth=1.4*devicePixelRatio;
+    ctx.beginPath();ctx.moveTo(cx+w*0.3,topY-24*devicePixelRatio);ctx.lineTo(cx+w*0.55,topY+40*devicePixelRatio);ctx.stroke();
+    ctx.beginPath();ctx.arc(cx+w*0.3,topY-24*devicePixelRatio,8*devicePixelRatio,0,7);
+    ctx.fillStyle='rgba(160,64,54,.85)';ctx.fill();
+    if(fill<target){ fill=Math.min(target,fill+(reduceMotion?target:0.02)); requestAnimationFrame(render); }
+  }
+  render();
+}
+
+/* share + restart */
+$('#shareBtn').addEventListener('click',()=>{
+  const {r,P}=pickRecipe();
+  const text=`我的今日特调 · ${r.zh} (${r.en})\n工作人格 · ${P.zh}\n${$('#ckPoem').innerText}\n— NIGHTCAP`;
+  navigator.clipboard?.writeText(text).catch(()=>{});
+  toast('已复制酒语 · 敬今天的自己');
+});
+$('#againBtn').addEventListener('click',()=>{
+  ambient.stop(); playing=false;
+  $('#musicCard').classList.remove('playing');
+  $('#icoPlay').hidden=false; $('#icoPause').hidden=true;
+  Object.assign(state,{base:null,persona:null,ices:[],quizDone:false,selfTested:false,shake:0});
+  ans.act=0; ans.heat=0; analyzed=false;
+  const ab=$('#analyzeBtn'); ab.disabled=false; ab.innerHTML='开始分析你的焦虑源泉';
+  $('#stressNum').textContent='0'; $('#stressLvl').textContent='待分析';
+  $('#gaugeArc').style.strokeDashoffset=326.7;
+  $('#stressNote').textContent='点击左侧「开始分析」，从 IM 记录里蒸馏你的焦虑指数。';
+  factorList.querySelectorAll('.factor').forEach(f=>f.removeAttribute('style'));
+  factorList.querySelectorAll('.bar i').forEach(b=>b.removeAttribute('style'));
+  [...$('#proofMeter').children].forEach(s=>s.classList.remove('on'));
+  $('#proofNum').textContent='–';
+  $('#proofTxt').textContent='焦虑指数将映射为酒的烈度。';
+  document.querySelectorAll('.spirit').forEach(x=>x.classList.remove('sel','rec'));
+  $('#spiritNote').textContent='分析完成后，按烈度推荐；也可以另选一支。';
+  $('#toIce').disabled=true;
+  quizBox.hidden=false; quizBox.innerHTML=''; renderQuizEntry();
+  $('#personaCard').hidden=true;
+  const tb=$('#trayBlock'); tb.hidden=true; tb.classList.remove('locked');
+  const cb=$('#coverBtn'); cb.hidden=false; cb.disabled=true;
+  $('#shakeInstr').hidden=true; $('#shakeBarWrap').hidden=true; $('#shakePct').hidden=true;
+  $('#shakeFill').style.width='0%'; $('#shakePct').textContent='0%';
+  const sh=$('#shakeStage'); sh.hidden=true; delete sh.dataset.done;
+  $('#mixGlass').style.opacity=''; mix.reset();
+  go(0);
+});
+
+/* =====================================================================
+   INTRO (P1) — 词云 → 招牌 → 推门
+   ===================================================================== */
+const INTRO_WORDS=[
+  ['未闭环任务',16,28,20,1],['悬置协作',64,22,16,0],['卡点事项',40,18,15,0],
+  ['周一抗拒',72,42,19,1],['疲惫',26,50,17,0],['虚度愧疚',56,58,16,0],
+  ['深夜消息',10,62,15,0],['反复回放',44,36,18,1],['认知张力',78,64,14,0],
+  ['烦躁',32,70,15,0],['失眠',58,74,16,0],['后台进程',20,40,13,0],
+  ['等一个回复',68,32,13,0],['反刍',48,68,20,1]
+];
+let introTl=null;
+function playIntro(){
+  const intro=$('#intro'),cloud=$('#introCloud');
+  INTRO_WORDS.forEach(([t,x,y,s,hot])=>{
+    const w=document.createElement('span');
+    w.className='w'+(hot?' hot':''); w.textContent=t;
+    w.style.left=x+'%'; w.style.top=y+'%'; w.style.fontSize=s+'px';
+    w.style.animationDelay=(Math.random()*-5).toFixed(2)+'s';
+    cloud.appendChild(w);
+  });
+  const words=[...cloud.children];
+  introTl=gsap.timeline({onComplete:()=>{ introDone=true; intro.classList.add('done'); }});
+  introTl
+    /* 幕一 · 词云描述场景（放慢，保证可读） */
+    .to('#introSkip',{opacity:.85,duration:.4},0)
+    .fromTo('#introTime',{opacity:0,y:-8},{opacity:1,y:0,duration:.8,ease:'power2.out'},.2)
+    .fromTo(words,{opacity:0,filter:'blur(6px)'},
+      {opacity:i=>INTRO_WORDS[i][4]?0.95:0.6,filter:'blur(0px)',duration:.9,
+       stagger:{each:.16,from:'random'}},.6)
+    .fromTo('#introMid',{opacity:0},{opacity:1,duration:.8},3.8)
+    /* 幕二 · 点出背后的效应 */
+    .to(words,{opacity:0,filter:'blur(8px)',duration:.9,stagger:{each:.04,from:'center'}},5.6)
+    .to(['#introMid','#introTime'],{opacity:0,duration:.5},5.8)
+    .fromTo('#introEffect',{opacity:0,y:18,filter:'blur(8px)'},
+      {opacity:1,y:0,filter:'blur(0px)',duration:1,ease:'power2.out'},6.4)
+    .to('#introEffect',{opacity:0,y:-14,filter:'blur(6px)',duration:.7},9.4)
+    /* 幕三 · 赛博酒馆登场 */
+    .fromTo('#introPre',{opacity:0},{opacity:1,duration:.8},10.2)
+    .call(()=>$('#introSign').classList.add('on'),null,11.0)
+    .fromTo('#introSign',{scale:.96},{scale:1,duration:1,ease:'power2.out'},11.0)
+    .to('#introPre',{opacity:0,duration:.4},11.9)
+    .fromTo('#introLine',{opacity:0,y:8},{opacity:1,y:0,duration:.7,ease:'power2.out'},12.1)
+    .fromTo('#introFoot',{opacity:0},{opacity:1,duration:.8},12.5)
+    .to('#introSkip',{opacity:0,duration:.3},13.1)
+    .call(()=>landingEnter(),null,13.5)
+    .to('.intro-inner',{opacity:0,duration:.45,ease:'power2.in'},13.65)
+    .to('.door-l',{xPercent:-102,duration:1.2,ease:'power3.inOut'},14.05)
+    .to('.door-r',{xPercent:102,duration:1.2,ease:'power3.inOut'},14.05);
+  intro.addEventListener('click',()=>{ if(introTl) introTl.progress(1); },{once:true});
+}
+let landingPlayed=false;
+function landingEnter(){
+  if(landingPlayed||reduceMotion) return; landingPlayed=true;
+  gsap.fromTo('#s1 .glass-badge',{opacity:0,y:14},{opacity:1,y:0,duration:.8,ease:'power2.out'});
+  gsap.fromTo('#s1 h1',{opacity:0,y:26},{opacity:1,y:0,duration:1,ease:'power3.out',delay:.1});
+  gsap.fromTo('#s1 .cjk',{opacity:0},{opacity:1,duration:.9,delay:.3});
+  gsap.fromTo('#s1 .tagline',{opacity:0,y:12},{opacity:1,y:0,duration:.8,delay:.45});
+  gsap.fromTo('#s1 .creed .card',{opacity:0,y:16},{opacity:1,y:0,duration:.7,stagger:.14,ease:'power3.out',delay:.6});
+  gsap.fromTo('#s1 #enterBtn',{opacity:0,y:10},{opacity:1,y:0,duration:.7,delay:1.15});
+  gsap.fromTo('#s1 .hint',{opacity:0},{opacity:1,duration:.8,delay:1.4});
+}
+
+/* boot */
+els[0].classList.add('active'); syncRail(); onEnter(0);
+if(reduceMotion){ introDone=true; $('#intro').classList.add('done'); }
+else playIntro();
+</script>
+</body>
+</html>
