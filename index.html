@@ -238,65 +238,113 @@
     opacity:0;transform:scale(.8);transition:all .4s var(--ease)}
   .spirit.rec .rec-badge{opacity:1;transform:scale(1)}
 
-  /* =================== P5 人格 / 冰 / 摇 =================== */
-  .side-l{display:flex;flex-direction:column;gap:16px;max-height:100%;overflow-y:auto;padding-right:4px}
-  .quiz-card{border:1px solid var(--line);border-radius:var(--seed-radius);background:var(--surface);padding:22px 22px 16px}
-  .q-idx{font-size:10px;letter-spacing:.3em;color:var(--amber-soft);margin-bottom:10px;font-weight:600}
-  .q-t{font-family:var(--font-cjk-display);font-size:17px;line-height:1.6;margin-bottom:12px}
-  .quiz-opt{display:block;width:100%;text-align:left;margin-top:10px;padding:12px 14px;
-    border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--fg-soft);
-    font-size:13px;cursor:pointer;transition:all .3s var(--ease);font-family:var(--font-sans)}
-  .quiz-opt:hover{border-color:var(--amber);color:var(--seed-fg);transform:translateX(4px)}
-  .persona-card{border:1px solid var(--line-strong);border-radius:var(--seed-radius);padding:20px 22px;
-    background:linear-gradient(180deg,color-mix(in srgb,var(--seed-primary) 10%,transparent),var(--surface))}
-  .persona-card .p-en{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--amber-soft);font-weight:600}
-  .persona-card .p-zh{font-family:var(--font-cjk-display);font-size:26px;font-weight:700;letter-spacing:.1em;margin:8px 0 8px}
-  .persona-card .p-desc{font-size:12.5px;line-height:1.7;color:var(--fg-soft);font-weight:300}
-  .persona-card .p-axes{display:flex;gap:8px;margin-top:12px}
-  .persona-card .p-axes span{font-size:10px;letter-spacing:.1em;color:var(--fg-soft);
-    border:1px solid var(--line);border-radius:99px;padding:4px 10px}
-  .tray-title{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-soft);margin-bottom:12px}
-  .ice-tray{display:flex;gap:22px;flex-wrap:wrap}
-  .tray-sub{flex-basis:100%;font-size:10px;letter-spacing:.22em;color:var(--fg-faint);margin:4px 0 0}
-  .ice{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:grab;touch-action:none;user-select:none}
-  .ice .cube{width:50px;height:50px;border-radius:12px;transform:rotate(8deg);
+  /* =================== P5 辅料 / 冰 / 摇 =================== */
+  #s3 .scene-head p{max-width:720px;margin:8px auto 0}
+  .addon-entry{position:relative;z-index:3;width:min(720px,88vw);text-align:center;
+    border:1px solid var(--line);border-radius:calc(var(--seed-radius) * 1.25);padding:44px 48px;
+    background:radial-gradient(100% 130% at 50% 0%,color-mix(in srgb,var(--seed-primary) 12%,transparent),transparent 62%),var(--surface-2);
+    box-shadow:0 34px 90px -56px var(--shadow)}
+  .addon-entry .entry-no{font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--amber-soft)}
+  .addon-entry h3{font-family:var(--font-cjk-display);font-size:30px;letter-spacing:.11em;margin:12px 0 12px}
+  .addon-entry p{font-size:13px;line-height:1.9;color:var(--fg-soft);font-weight:300;margin:0 auto 24px;max-width:560px}
+  .addon-entry .signal-row{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-bottom:26px}
+  .signal-chip{font-size:10px;letter-spacing:.08em;color:var(--fg-faint);border:1px solid var(--line);border-radius:99px;padding:6px 11px}
+  .addon-entry .scan-result{min-height:18px;margin-top:14px;font-size:10px;letter-spacing:.08em;color:var(--fg-faint)}
+
+  .addon-workspace{position:relative;z-index:2;display:grid;grid-template-columns:.82fr 1.35fr;gap:22px;
+    width:min(1220px,92vw);height:100%;align-items:stretch;padding:126px 0 76px;overflow-y:auto}
+  .ingredient-detail,.addon-warehouse{min-height:0;border:1px solid var(--line);border-radius:var(--seed-radius);
+    background:var(--surface);overflow:hidden}
+  .ingredient-detail{position:relative;padding:26px;display:flex;flex-direction:column}
+  .ingredient-detail::after{content:"";position:absolute;right:-70px;bottom:-95px;width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,color-mix(in srgb,var(--detail-hue,var(--seed-primary)) 24%,transparent),transparent 68%);pointer-events:none}
+  .detail-kicker,.panel-kicker{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber-soft);font-weight:600}
+  .detail-visual{height:128px;display:flex;align-items:center;justify-content:center;position:relative;margin:15px 0 8px}
+  .detail-orbit{position:absolute;width:108px;height:108px;border:1px solid color-mix(in srgb,var(--detail-hue,var(--seed-primary)) 45%,transparent);
+    border-radius:50%;box-shadow:0 0 40px -18px var(--detail-hue,var(--seed-primary))}
+  .detail-orbit::before,.detail-orbit::after{content:"";position:absolute;inset:12px;border:1px dashed var(--line);border-radius:50%}
+  .detail-orbit::after{inset:34px;background:var(--detail-hue,var(--seed-primary));border:0;box-shadow:0 0 24px var(--detail-hue,var(--seed-primary))}
+  .detail-name{font-family:var(--font-cjk-display);font-size:27px;letter-spacing:.08em;margin:8px 0 3px}
+  .detail-en{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--fg-faint)}
+  .detail-desc{font-size:13px;line-height:1.8;color:var(--fg-soft);font-weight:300;margin:18px 0}
+  .reason-box{border-left:2px solid var(--detail-hue,var(--amber));padding:2px 0 2px 14px;margin-bottom:17px}
+  .reason-box .rk{font-size:9px;letter-spacing:.2em;color:var(--fg-faint);text-transform:uppercase;margin-bottom:5px}
+  .reason-box p{font-size:12px;line-height:1.65;color:var(--seed-fg)}
+  .evidence{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto;position:relative;z-index:1}
+  .evidence span{font-size:9.5px;color:var(--fg-soft);border:1px solid var(--line);border-radius:99px;padding:5px 9px}
+
+  .addon-warehouse{display:grid;grid-template-rows:auto 1fr auto;padding:20px 22px;gap:16px;background:var(--surface-2)}
+  .formula-panel{border-bottom:1px solid var(--line);padding-bottom:15px}
+  .formula-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+  .formula-status{font-size:9px;letter-spacing:.13em;color:var(--fg-faint)}
+  .formula-status.live{color:var(--amber-soft)}
+  .formula-bars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .formula-item .fi-top{display:flex;justify-content:space-between;font-size:10px;color:var(--fg-soft);margin-bottom:6px}
+  .formula-item .fi-track{height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+  .formula-item .fi-track i{display:block;height:100%;width:0;background:var(--h,var(--amber));border-radius:99px;box-shadow:0 0 10px var(--h,var(--amber))}
+  .warehouse-title{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
+  .warehouse-title h3{font-family:var(--font-cjk-display);font-size:17px;letter-spacing:.1em}
+  .warehouse-title p{font-size:10px;color:var(--fg-faint)}
+  .addon-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .addon-card{all:unset;cursor:pointer;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center;
+    min-width:0;padding:11px;border:1px solid var(--line);border-radius:11px;background:color-mix(in srgb,var(--seed-surface) 72%,transparent);
+    transition:transform .28s var(--ease),border-color .28s var(--ease),background .28s var(--ease)}
+  .addon-card:hover{transform:translateY(-2px);border-color:var(--line-strong)}
+  .addon-card.sel{border-color:var(--h,var(--amber));background:color-mix(in srgb,var(--h,var(--seed-primary)) 10%,var(--seed-surface));
+    box-shadow:0 10px 28px -20px var(--h,var(--amber))}
+  .addon-swatch{width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 34% 30%,var(--seed-fg),var(--h) 25%,color-mix(in srgb,var(--h) 55%,var(--shadow)) 74%);
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--seed-fg) 25%,transparent),0 8px 18px -12px var(--h)}
+  .addon-card .an{font-family:var(--font-cjk-display);font-size:13px;font-weight:600;letter-spacing:.05em}
+  .addon-card .ae{font-size:8.5px;letter-spacing:.14em;color:var(--fg-faint);text-transform:uppercase;margin-top:3px}
+  .addon-card .ap{font-family:var(--font-display);font-size:18px;color:var(--amber-soft)}
+
+  .ice-step{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:center;border-top:1px solid var(--line);padding-top:15px}
+  .step-label{font-size:9px;letter-spacing:.22em;color:var(--amber-soft);text-transform:uppercase;margin-bottom:5px}
+  .tray-title{font-family:var(--font-cjk-display);font-size:15px;letter-spacing:.08em;color:var(--seed-fg);margin-bottom:5px}
+  .tray-help{font-size:10px;line-height:1.55;color:var(--fg-faint);margin-bottom:12px}
+  .ice-tray{display:flex;gap:18px;flex-wrap:wrap}
+  .ice{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:grab;touch-action:none;user-select:none}
+  .ice .cube{width:46px;height:46px;border-radius:12px;transform:rotate(8deg);
     background:linear-gradient(135deg,color-mix(in srgb,var(--h) 72%,#fff 14%),color-mix(in srgb,var(--h) 55%,#000 12%));
-    box-shadow:0 10px 26px -10px var(--h), inset 0 0 14px rgba(255,255,255,.35);
-    border:1px solid color-mix(in srgb,var(--h) 70%, #fff 20%);transition:transform .3s var(--ease)}
+    box-shadow:0 10px 26px -10px var(--h),inset 0 0 14px rgba(255,255,255,.35);
+    border:1px solid color-mix(in srgb,var(--h) 70%,#fff 20%);transition:transform .3s var(--ease)}
   .ice:hover .cube{transform:rotate(8deg) scale(1.08)}
-  .ice .lbl{font-size:10px;color:var(--fg-soft);letter-spacing:.08em}
-  .ice.rec .cube{outline:2px solid var(--amber);outline-offset:3px}
+  .ice .lbl{font-size:9px;color:var(--fg-soft);letter-spacing:.05em;max-width:82px;text-align:center}
   .ice.pred .cube{outline:2px solid var(--amber);outline-offset:3px}
-  .ice.self .cube{outline:2px dashed color-mix(in srgb,var(--seed-fg) 55%,transparent);outline-offset:3px}
-  .ice .icetag{font-size:9px;letter-spacing:.1em;color:var(--amber-soft);
-    border:1px solid var(--line-strong);border-radius:99px;padding:2px 7px}
-  .ice .icetag.self{color:var(--fg-soft);border-color:var(--line)}
-  .scan-result{margin-top:12px;font-size:12px;color:var(--fg-soft);border-top:1px solid var(--line);padding-top:10px}
-  .scan-result b{color:var(--amber-soft);font-weight:600;font-family:var(--font-cjk-display)}
-  .brow{margin-bottom:11px;opacity:0}
-  .brow .bt{display:flex;justify-content:space-between;font-size:10px;color:var(--fg-faint);margin-bottom:5px}
-  .brow .bt b{color:var(--fg-soft);font-weight:500;font-size:11px;letter-spacing:.08em}
-  .brow .bi{position:relative;height:4px;border-radius:99px;background:var(--line)}
-  .brow .bi i{position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;
-    transform:translate(-50%,-50%);background:var(--amber);box-shadow:0 0 10px var(--glow)}
-  .brow .bn{font-size:10px;color:var(--fg-faint);margin-top:5px}
-  .ice.rec .lbl{color:var(--amber-soft)}
-  .tray-block.locked .ice{opacity:.3;pointer-events:none}
-  .tray-block.locked .ice.dropped{opacity:1}
-  .ice-ghost{position:fixed;z-index:95;width:50px;height:50px;border-radius:12px;pointer-events:none;
-    transform:translate(-50%,-50%) rotate(8deg)}
-  .mix-col{display:flex;flex-direction:column;align-items:center;gap:12px}
-  .mix-wrap{position:relative;width:340px;height:400px}
+  .ice .icetag{font-size:8px;letter-spacing:.08em;color:var(--amber-soft);border:1px solid var(--line-strong);border-radius:99px;padding:2px 6px}
+  .tray-block.locked .ice{opacity:.3;pointer-events:none}.tray-block.locked .ice.dropped{opacity:1}
+  .ice-ghost{position:fixed;z-index:95;width:50px;height:50px;border-radius:12px;pointer-events:none;transform:translate(-50%,-50%) rotate(8deg)}
+  .mix-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .mix-wrap{position:relative;width:280px;height:230px;transform:scale(.72);transform-origin:center center;margin:-34px 0}
   .mix-wrap canvas{position:absolute;inset:0}
   #shakeStage{cursor:grab;touch-action:none;user-select:none}
   #shakeStage.grab{cursor:grabbing}
-  .shake-cta{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
-  .shake-instr{font-size:13px;color:var(--fg-soft);font-weight:300;letter-spacing:.04em}
+  .shake-cta{text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px}
+  .shake-cta .btn{padding:11px 18px;font-size:10px}
+  .shake-instr{font-size:10.5px;color:var(--fg-soft);font-weight:300;letter-spacing:.03em}
   .shake-instr b{color:var(--amber-soft);font-weight:500}
-  .shake-bar{width:300px;height:4px;border-radius:999px;background:var(--line);overflow:hidden}
-  .shake-bar i{display:block;height:100%;width:0;border-radius:999px;
-    background:linear-gradient(90deg,var(--amber-soft),var(--amber));box-shadow:0 0 14px var(--glow);transition:width .12s linear}
-  .shake-pct{font-family:var(--font-display);font-size:16px;color:var(--fg-soft);letter-spacing:.1em}
+  .shake-bar{width:230px;height:4px;border-radius:999px;background:var(--line);overflow:hidden}
+  .shake-bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--amber-soft),var(--amber));box-shadow:0 0 14px var(--glow);transition:width .12s linear}
+  .shake-pct{font-family:var(--font-display);font-size:14px;color:var(--fg-soft);letter-spacing:.1em}
+
+  @media (max-width:1080px){
+    .addon-workspace{grid-template-columns:1fr;padding:116px 0 88px;overflow-y:auto;height:100%}
+    .ingredient-detail{min-height:420px}.addon-warehouse{overflow:visible}
+    .ice-step{grid-template-columns:1fr}.mix-col{margin-top:6px}
+  }
+  @media (max-width:720px){
+    #s3 .scene-head{top:52px;padding:0 18px}
+    #s3 .scene-head p{display:none}
+    .addon-entry{width:min(88vw,520px);padding:30px 22px;margin-top:48px}
+    .addon-entry h3{font-size:23px;letter-spacing:.07em}
+    .addon-workspace{width:92vw;padding-top:118px;gap:14px}
+    .ingredient-detail,.addon-warehouse{padding:20px}
+    .ingredient-detail{min-height:390px}
+    .formula-bars{grid-template-columns:1fr;gap:8px}
+    .addon-cards{grid-template-columns:1fr}
+    .ice-tray{gap:14px}
+    .scene-actions{bottom:18px}
+  }
 
   /* =================== P6 尾调 =================== */
   #s4 .reveal{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:56px;
@@ -503,45 +551,82 @@
   </section>
 
   <!-- ============ P4 · STEP2 人格 / 冰块 / 摇匀 ============ -->
-  <section class="scene" id="s3" data-component="scene-ice">
+  <section class="scene" id="s3" data-component="scene-addons">
     <div class="scene-head">
-      <div class="idx">ii. 冰块</div>
-      <h2>人 格 底 色 · 入 杯 摇 匀</h2>
-      <p>IM 数据先预测你的底色，四题自我校准可选；拖冰入杯（至多两块），再摇匀。</p>
+      <div class="idx">ii. 主体</div>
+      <h2>性 格 底 色 · 辅 料 调 和</h2>
+      <p>从 IM 对话里辨认你的工作风格，再把需要的风味与冰块交到你手里。</p>
     </div>
-    <div class="grid2">
-      <div class="side-l">
-        <div class="metric-card" id="scanCard" data-component="im-style-scan">
-          <div class="stress-top"><span class="eyebrow">IM 工作风格扫描 · 数据预测</span></div>
-          <div id="scanBars"></div>
-          <div class="scan-result" id="scanResult">正在读取本周 IM 行为…</div>
-        </div>
-        <div class="quiz-card" id="quizBox" data-component="work-persona-quiz"></div>
-        <div class="persona-card" id="personaCard" hidden data-component="persona-result"></div>
-        <div class="tray-block" id="trayBlock" hidden>
-          <div class="tray-title">拖冰入杯 · 至多两块（底色 + 情绪）</div>
-          <div class="ice-tray" id="iceTray"></div>
-        </div>
+
+    <div class="addon-entry" id="addonEntry" data-component="addon-analysis-entry">
+      <div class="entry-no">Step 01 · IM Style Scan</div>
+      <h3>根据你的性格底色搭配辅料</h3>
+      <p>算法将分析回应节奏、协作主动度、表达温度与时间边界，预测一份可解释的职场辅料配方。</p>
+      <div class="signal-row" aria-label="分析维度">
+        <span class="signal-chip">回应节奏</span><span class="signal-chip">协作主动度</span>
+        <span class="signal-chip">表达温度</span><span class="signal-chip">时间边界</span>
       </div>
-      <div class="mix-col">
-        <div class="mix-wrap">
-          <canvas id="mixGlass"></canvas>
-          <canvas id="shakeStage" hidden></canvas>
-        </div>
-        <div class="shake-cta">
-          <button class="btn" id="coverBtn" disabled>
-            扣壶 · 开始摇匀
-            <svg class="ico" viewBox="0 0 24 24"><path d="M12 3v10M8 9l4 4 4-4M5 19h14"/></svg>
-          </button>
-          <div class="shake-instr" id="shakeInstr" hidden>按住酒壶<b> 上下拖动</b>，或反复点击开始摇酒</div>
-          <div class="shake-bar" id="shakeBarWrap" hidden><i id="shakeFill"></i></div>
-          <div class="shake-pct" id="shakePct" hidden>0%</div>
-        </div>
-      </div>
+      <button class="btn" id="addonAnalyzeBtn">开始分析 · 智能搭配辅料</button>
+      <div class="scan-result" id="addonScanStatus" aria-live="polite">等待读取本周 IM 行为</div>
     </div>
-    <div class="scene-actions">
-      <button class="btn btn-ghost" data-nav="1">← 返回</button>
+
+    <div class="addon-workspace" id="addonWorkspace" hidden>
+      <article class="ingredient-detail" id="ingredientDetail" data-component="ingredient-detail">
+        <div class="detail-kicker">Selected Ingredient · 辅料说明</div>
+        <div class="detail-visual"><div class="detail-orbit" aria-hidden="true"></div></div>
+        <h3 class="detail-name" id="detailName">—</h3>
+        <div class="detail-en" id="detailEn">—</div>
+        <p class="detail-desc" id="detailDesc"></p>
+        <div class="reason-box">
+          <div class="rk">Why this · 推荐理由</div>
+          <p id="detailReason"></p>
+        </div>
+        <div class="evidence" id="detailEvidence" aria-label="数据证据"></div>
+      </article>
+
+      <section class="addon-warehouse" data-component="ingredient-warehouse">
+        <div class="formula-panel" data-component="formula-prediction">
+          <div class="formula-head">
+            <div class="panel-kicker">Step 01 · 辅料配方预测</div>
+            <div class="formula-status live" id="formulaStatus">预测完成 · 救火队长型</div>
+          </div>
+          <div class="formula-bars" id="formulaBars"></div>
+        </div>
+
+        <div class="warehouse-body">
+          <div class="warehouse-title">
+            <h3>职场辅料仓库</h3>
+            <p>点击名片 · 查看左侧说明</p>
+          </div>
+          <div class="addon-cards" id="addonCards"></div>
+        </div>
+
+        <div class="ice-step" data-component="gesture-ice-step">
+          <div class="tray-block" id="trayBlock">
+            <div class="step-label">Step 02 · Gesture Ice</div>
+            <div class="tray-title">辅料已调和，选择你的冰块并加入杯中。</div>
+            <div class="tray-help">按住冰块拖入右侧酒杯，至多两块；加入后即可扣壶，用上下手势摇酒。</div>
+            <div class="ice-tray" id="iceTray"></div>
+          </div>
+          <div class="mix-col">
+            <div class="mix-wrap" aria-label="调酒杯互动区">
+              <canvas id="mixGlass"></canvas>
+              <canvas id="shakeStage" hidden></canvas>
+            </div>
+            <div class="shake-cta">
+              <button class="btn" id="coverBtn" disabled>
+                扣壶 · 开始摇匀
+                <svg class="ico" viewBox="0 0 24 24"><path d="M12 3v10M8 9l4 4 4-4M5 19h14"/></svg>
+              </button>
+              <div class="shake-instr" id="shakeInstr" hidden>按住酒壶<b>上下拖动</b>，或反复点击开始摇酒</div>
+              <div class="shake-bar" id="shakeBarWrap" hidden><i id="shakeFill"></i></div>
+              <div class="shake-pct" id="shakePct" hidden>0%</div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+    <div class="scene-actions"><button class="btn btn-ghost" data-nav="1">← 返回</button></div>
   </section>
 
   <!-- ============ P5 · 尾调 ============ -->
@@ -736,14 +821,14 @@ const RECIPES = {
 };
 
 /* ---------- shared state ---------- */
-const state = { base:null, persona:null, ices:[], quizDone:false, selfTested:false, shake:0 };
+const state = { base:null, persona:null, addon:null, ices:[], quizDone:false, selfTested:false, shake:0 };
 let introDone = false;
 
 /* =====================================================================
    SCENE CONTROLLER
    ===================================================================== */
 const scenes = ['s1','s2','s3','s4'];
-const sceneNames = ['序','基酒','冰块','尾调'];
+const sceneNames = ['序','基酒','主体','尾调'];
 let current = 0, locked = false;
 const els = scenes.map(id=>$('#'+id));
 
@@ -809,7 +894,7 @@ let wheelLock=false;
 window.addEventListener('wheel',e=>{
   if(!introDone) return;
   if(current===1 && e.target.closest('.grid2')) return;
-  if(current===2 && e.target.closest('.grid2')) return;
+  if(current===2 && e.target.closest('.addon-workspace')) return;
   if(current===3 && e.target.closest('.info')) return;
   if(wheelLock||locked) return;
   if(Math.abs(e.deltaY)<24) return;
@@ -1023,121 +1108,118 @@ Object.entries(SPIRITS).forEach(([key,s])=>{
 });
 
 /* =====================================================================
-   P5 — 人格测试 / 冰块拖拽 / 摇匀
+   P5 — IM 辅料预测 / 名片联动 / 冰块拖拽 / 摇匀
    ===================================================================== */
-const quizBox=$('#quizBox');
-const ans={act:0,heat:0};
+const ADDONS=[
+  {k:'chamomile',name:'洋甘菊',en:'Chamomile Quiet',pct:38,hue:'#9fb6d9',
+    desc:'柔和的草本与苹果香气，用来降低持续在线后的紧绷感，让味觉从高警觉慢慢回到夜晚。',
+    reason:'你的消息回复很快、深夜仍保持活跃。配方先加入一份柔和草本，提醒大脑：此刻不必继续待命。',
+    evidence:['平均 6 分钟回复','最晚活跃 23:40','深夜消息 23 条']},
+  {k:'lime',name:'青柠',en:'Lime Closure',pct:27,hue:'#c9d46b',
+    desc:'清亮酸度负责切开黏滞感，象征把模糊任务写成下一步，让悬置的协作重新获得边界。',
+    reason:'本周仍有 6 件未闭环事项。青柠提供清晰的收口感，把反复回放的任务从脑内移到可执行清单。',
+    evidence:['未闭环 6 件','最长等待 26 小时','协作发起 62%']},
+  {k:'sea-salt',name:'海盐',en:'Sea Salt Boundary',pct:21,hue:'#8fd0c6',
+    desc:'微量咸感会托起基酒的层次，也代表把“全部接住”改写成有边界的负责。',
+    reason:'你习惯主动推动协作，也容易把团队节奏背在自己身上。海盐保留担当，但削弱过度负责的苦涩。',
+    evidence:['周末消息 41 条','被 @ 57 次','协作主动度 62%']},
+  {k:'rosemary',name:'迷迭香',en:'Rosemary Focus',pct:14,hue:'#7bb49a',
+    desc:'冷冽草木香提供结构感，让复杂信息停在前景，而不是继续成为混乱的后台噪声。',
+    reason:'你在高信息密度中仍倾向快速回应。少量迷迭香保留清醒，但不再把每一条消息都当作即时警报。',
+    evidence:['会议 14 场','本周被 @ 57 次','表达温度 64%']}
+];
+let addonAnalyzed=false;
 
-/* IM 工作风格扫描：用数据先预测人格底色 */
-let scanPlayed=false;
-function playScan(){
-  if(scanPlayed) return; scanPlayed=true;
-  const bars=$('#scanBars'); bars.innerHTML='';
-  BEHAVIOR.forEach(b=>{
-    const d=document.createElement('div'); d.className='brow';
-    d.innerHTML=`<div class="bt"><span>${b.l}</span><b>${b.label}</b><span>${b.r}</span></div>
-      <div class="bi"><i style="left:50%"></i></div><div class="bn">${b.note}</div>`;
-    bars.appendChild(d);
+function buildFormula(){
+  const bars=$('#formulaBars'); bars.innerHTML='';
+  ADDONS.slice(0,3).forEach(a=>{
+    const item=document.createElement('div');
+    item.className='formula-item';
+    item.innerHTML=`<div class="fi-top"><span>${a.name}</span><b>${a.pct}%</b></div>
+      <div class="fi-track"><i style="--h:${a.hue}"></i></div>`;
+    bars.appendChild(item);
   });
-  const rows=[...bars.children];
-  if(reduceMotion){
-    rows.forEach((r,i)=>{ r.style.opacity=1; r.querySelector('.bi i').style.left=BEHAVIOR[i].v+'%'; });
-    showScanResult(); return;
-  }
-  const tl=gsap.timeline();
-  tl.to(rows,{opacity:1,duration:.4,stagger:.14});
-  rows.forEach((r,i)=>tl.to(r.querySelector('.bi i'),
-    {left:BEHAVIOR[i].v+'%',duration:.7,ease:'power2.out'}, .3+i*.16));
-  tl.call(showScanResult,null,'+=.2');
-}
-function showScanResult(){
-  const PP=PERSONAS[predictPersona()];
-  const emo=EMO_ICES.find(e=>e.k===EMO_REC);
-  $('#scanResult').innerHTML=
-    `数据预测 · 你的底色是 <b>${PP.zh}</b> → 推荐底色冰 <b>${PP.ice.name}</b><br>
-     本周情绪冰 → <b>${emo.name}</b>（${emo.from}）`;
-  if(!reduceMotion) gsap.fromTo('#scanResult',{opacity:0,y:8},{opacity:1,y:0,duration:.5});
+  const fills=bars.querySelectorAll('i');
+  if(reduceMotion) fills.forEach((el,i)=>el.style.width=ADDONS[i].pct+'%');
+  else gsap.to(fills,{width:i=>ADDONS[i].pct+'%',duration:.9,stagger:.12,ease:'power2.out',delay:.2});
 }
 
-/* 自测入口：数据已预测，答题只做自我校准（可跳过） */
-function renderQuizEntry(){
-  quizBox.innerHTML=`<div class="q-idx">自我校准 · 可选</div>
-    <div class="q-t">数据已经预测了你的底色。<br>要不要再用 4 道题，亲自确认？</div>
-    <button class="quiz-opt" id="quizStartBtn">答一下 · 4 道快题</button>
-    <button class="quiz-opt" id="quizSkipBtn">跳过 · 直接采用数据预测</button>`;
-  $('#quizStartBtn').addEventListener('click',()=>{
-    const swap=()=>{ renderQuiz(0);
-      if(!reduceMotion) gsap.fromTo(quizBox,{opacity:0,x:16},{opacity:1,x:0,duration:.3,ease:'power2.out'}); };
-    if(reduceMotion) swap();
-    else gsap.to(quizBox,{opacity:0,x:-16,duration:.22,ease:'power2.in',onComplete:swap});
+function selectAddon(key){
+  const a=ADDONS.find(x=>x.k===key) || ADDONS[0];
+  state.addon=a.k;
+  document.querySelectorAll('.addon-card').forEach(c=>c.classList.toggle('sel',c.dataset.k===a.k));
+  const detail=$('#ingredientDetail');
+  detail.style.setProperty('--detail-hue',a.hue);
+  $('#detailName').textContent=a.name;
+  $('#detailEn').textContent=a.en;
+  $('#detailDesc').textContent=a.desc;
+  $('#detailReason').textContent=a.reason;
+  $('#detailEvidence').innerHTML=a.evidence.map(e=>`<span>${e}</span>`).join('');
+  if(!reduceMotion) gsap.fromTo(detail.querySelectorAll('.detail-name,.detail-en,.detail-desc,.reason-box,.evidence'),
+    {opacity:0,y:8},{opacity:1,y:0,duration:.38,stagger:.045,ease:'power2.out'});
+}
+
+function buildAddonCards(){
+  const wrap=$('#addonCards'); wrap.innerHTML='';
+  ADDONS.forEach(a=>{
+    const card=document.createElement('button');
+    card.className='addon-card'; card.dataset.k=a.k; card.style.setProperty('--h',a.hue);
+    card.innerHTML=`<span class="addon-swatch" aria-hidden="true"></span>
+      <span><span class="an">${a.name}</span><span class="ae">${a.en}</span></span>
+      <span class="ap">${a.pct}%</span>`;
+    card.addEventListener('click',()=>selectAddon(a.k));
+    wrap.appendChild(card);
   });
-  $('#quizSkipBtn').addEventListener('click',()=>adoptPredicted());
-}
-function adoptPredicted(){
-  state.quizDone=true; state.selfTested=false;
-  state.persona=predictPersona();
-  showPersonaCard('数据预测');
-}
-function renderQuiz(i){
-  const q=QUIZ[i];
-  quizBox.innerHTML=`<div class="q-idx">工作人格微测试 · Q${i+1} / ${QUIZ.length}</div>
-    <div class="q-t">${q.q}</div>`+
-    q.a.map((o,k)=>`<button class="quiz-opt" data-k="${k}">${o[0]}</button>`).join('');
-  quizBox.querySelectorAll('.quiz-opt').forEach(b=>b.addEventListener('click',()=>{
-    const o=q.a[+b.dataset.k]; ans.act+=o[1]; ans.heat+=o[2];
-    if(i<QUIZ.length-1){
-      gsap.to(quizBox,{opacity:0,x:-16,duration:.22,ease:'power2.in',onComplete:()=>{
-        renderQuiz(i+1);
-        gsap.fromTo(quizBox,{opacity:0,x:16},{opacity:1,x:0,duration:.3,ease:'power2.out'});
-      }});
-    } else finishQuiz();
-  }));
-}
-function finishQuiz(){
-  state.quizDone=true; state.selfTested=true;
-  const act=ans.act>=1, heat=ans.heat>=1;
-  state.persona = act&&heat?'captain': act?'lighthouse': heat?'greenhouse':'deepsea';
-  const pred=predictPersona();
-  showPersonaCard(state.persona===pred?'自测与数据一致':`数据预测 ${PERSONAS[pred].zh} · 采用你的自测`);
-}
-function showPersonaCard(tag){
-  const P=PERSONAS[state.persona];
-  quizBox.hidden=true;
-  const pc=$('#personaCard'); pc.hidden=false;
-  pc.innerHTML=`<div class="p-en">${P.en} · 工作人格</div><div class="p-zh">${P.zh}</div>
-    <div class="p-desc">${P.desc}</div>
-    <div class="p-axes">${P.axes.map(a=>`<span>${a}</span>`).join('')}<span>${tag}</span></div>`;
-  gsap.fromTo(pc,{opacity:0,y:14},{opacity:1,y:0,duration:.6,ease:'power2.out'});
-  const tb=$('#trayBlock'); tb.hidden=false;
-  gsap.fromTo(tb,{opacity:0,y:14},{opacity:1,y:0,duration:.6,delay:.2});
-  buildTray();
 }
 
 function buildTray(){
   const tray=$('#iceTray'); tray.innerHTML='';
-  const pred=predictPersona();
-  Object.entries(PERSONAS).forEach(([k,p])=>{
+  const personaKey=state.persona || predictPersona();
+  const P=PERSONAS[personaKey];
+  const choices=[
+    {type:'persona',k:personaKey,hue:P.ice.hue,name:P.ice.name,tag:'底色推荐'},
+    ...EMO_ICES.map(m=>({...m,type:'emo',tag:m.k===EMO_REC?'本周推荐':''}))
+  ];
+  choices.forEach(item=>{
     const d=document.createElement('div');
-    d.className='ice'+(k===pred?' pred':''); d.dataset.k=k;
-    let tag='';
-    if(k===pred) tag='<span class="icetag">数据预测</span>';
-    else if(state.selfTested&&k===state.persona) tag='<span class="icetag self">自测</span>';
-    d.innerHTML=`<span class="cube" style="--h:${p.ice.hue}"></span><span class="lbl">${p.ice.name}</span>${tag}`;
-    d.addEventListener('pointerdown',e=>startIceDrag(e,{type:'persona',k,hue:p.ice.hue,name:p.ice.name}));
-    tray.appendChild(d);
-  });
-  const sub=document.createElement('div'); sub.className='tray-sub';
-  sub.textContent='情绪冰 · 来自本周 IM 数据';
-  tray.appendChild(sub);
-  EMO_ICES.forEach(m=>{
-    const d=document.createElement('div');
-    d.className='ice'+(m.k===EMO_REC?' pred':''); d.dataset.k=m.k;
-    d.innerHTML=`<span class="cube" style="--h:${m.hue}"></span><span class="lbl">${m.name}</span>
-      ${m.k===EMO_REC?'<span class="icetag">本周情绪</span>':''}`;
-    d.addEventListener('pointerdown',e=>startIceDrag(e,{type:'emo',k:m.k,hue:m.hue,name:m.name,from:m.from}));
+    d.className='ice'+(item.tag?' pred':''); d.dataset.k=item.k;
+    d.innerHTML=`<span class="cube" style="--h:${item.hue}"></span><span class="lbl">${item.name}</span>
+      ${item.tag?`<span class="icetag">${item.tag}</span>`:''}`;
+    d.addEventListener('pointerdown',e=>startIceDrag(e,item));
     tray.appendChild(d);
   });
 }
+
+function finishAddonAnalysis(){
+  addonAnalyzed=true;
+  state.persona=predictPersona();
+  state.quizDone=true;
+  const P=PERSONAS[state.persona];
+  $('#formulaStatus').textContent=`预测完成 · ${P.zh}型`;
+  buildFormula(); buildAddonCards(); buildTray(); selectAddon(ADDONS[0].k);
+  const entry=$('#addonEntry'),workspace=$('#addonWorkspace');
+  workspace.hidden=false;
+  if(reduceMotion){ entry.hidden=true; return; }
+  gsap.to(entry,{opacity:0,y:-12,duration:.35,ease:'power2.in',onComplete:()=>{
+    entry.hidden=true;
+    gsap.fromTo(workspace,{opacity:0,y:18},{opacity:1,y:0,duration:.7,ease:'power3.out'});
+  }});
+}
+
+$('#addonAnalyzeBtn').addEventListener('click',()=>{
+  if(addonAnalyzed) return;
+  const btn=$('#addonAnalyzeBtn'),status=$('#addonScanStatus');
+  btn.disabled=true; btn.textContent='正在分析 IM 对话…';
+  status.textContent='读取回应节奏 · 协作主动度 · 表达温度 · 时间边界';
+  const chips=document.querySelectorAll('#addonEntry .signal-chip');
+  if(reduceMotion){ finishAddonAnalysis(); return; }
+  gsap.timeline()
+    .to(chips,{color:'var(--amber-soft)',borderColor:'var(--line-strong)',y:-2,duration:.28,stagger:.18,ease:'power2.out'})
+    .to(chips,{y:0,duration:.2,stagger:.08})
+    .call(()=>{ status.textContent='风格底色已识别 · 正在生成职场辅料配方'; })
+    .to(btn,{opacity:.72,duration:.35})
+    .call(finishAddonAnalysis,null,'+=.35');
+});
 function startIceDrag(e,item){
   if(state.ices.length>=2 || state.ices.some(x=>x.k===item.k)) return;
   e.preventDefault();
@@ -1225,9 +1307,8 @@ const mix=(()=>{
 })();
 
 function enterIceScene(){
-  mix.size(); mix.start();
-  playScan();
-  if(!state.quizDone && quizBox.innerHTML==='') renderQuizEntry();
+  mix.size();
+  mix.start();
 }
 
 /* cover & shake */
@@ -1297,7 +1378,7 @@ const shaker=(()=>{
       ctx.fillStyle='rgba(220,235,255,.5)';ctx.fill(); } }
     if(!reduceMotion) raf=requestAnimationFrame(draw);
   }
-  cv.addEventListener('pointerdown',e=>{cv.classList.add('grab');lastY=e.clientY;cv.setPointerCapture(e.pointerId);addEnergy(.12);});
+  cv.addEventListener('pointerdown',e=>{cv.classList.add('grab');lastY=e.clientY;try{cv.setPointerCapture(e.pointerId);}catch(_){}addEnergy(.12);});
   cv.addEventListener('pointermove',e=>{ if(lastY!==null){ const dy=Math.abs(e.clientY-lastY);
     if(dy>4){ addEnergy(clamp(dy/120,.02,.22)); lastY=e.clientY; } }});
   window.addEventListener('pointerup',()=>{cv.classList.remove('grab');lastY=null;});
@@ -1325,10 +1406,12 @@ function buildReveal(){
   const {r,spirit,P}=pickRecipe();
   const pIce=state.ices.find(x=>x.type==='persona');
   const eIce=state.ices.find(x=>x.type==='emo');
+  const addon=ADDONS.find(x=>x.k===state.addon) || ADDONS[0];
   $('#ckName').textContent=r.zh;
   $('#ckEn').textContent=r.en+' · '+P.en;
   $('#ckRecipe').innerHTML=`
     <div class="row"><div class="k">Base 基酒</div><div class="v">${spirit.zh} · 烈度 Lv.${spirit.proof}</div></div>
+    <div class="row"><div class="k">Addon 职场辅料</div><div class="v">${addon.name} · 配方 ${addon.pct}%</div></div>
     <div class="row"><div class="k">Ice 底色冰</div><div class="v">${pIce?pIce.name:P.ice.name} · ${P.zh}</div></div>
     ${eIce?`<div class="row"><div class="k">Mood 情绪冰</div><div class="v">${eIce.name} · ${eIce.from}</div></div>`:''}
     <div class="row"><div class="k">Modifier 调和</div><div class="v">${r.mod}</div></div>
@@ -1468,8 +1551,8 @@ $('#againBtn').addEventListener('click',()=>{
   ambient.stop(); playing=false;
   $('#musicCard').classList.remove('playing');
   $('#icoPlay').hidden=false; $('#icoPause').hidden=true;
-  Object.assign(state,{base:null,persona:null,ices:[],quizDone:false,selfTested:false,shake:0});
-  ans.act=0; ans.heat=0; analyzed=false;
+  Object.assign(state,{base:null,persona:null,addon:null,ices:[],quizDone:false,selfTested:false,shake:0});
+  analyzed=false; addonAnalyzed=false;
   const ab=$('#analyzeBtn'); ab.disabled=false; ab.innerHTML='开始分析你的焦虑源泉';
   $('#stressNum').textContent='0'; $('#stressLvl').textContent='待分析';
   $('#gaugeArc').style.strokeDashoffset=326.7;
@@ -1482,9 +1565,15 @@ $('#againBtn').addEventListener('click',()=>{
   document.querySelectorAll('.spirit').forEach(x=>x.classList.remove('sel','rec'));
   $('#spiritNote').textContent='分析完成后，按烈度推荐；也可以另选一支。';
   $('#toIce').disabled=true;
-  quizBox.hidden=false; quizBox.innerHTML=''; renderQuizEntry();
-  $('#personaCard').hidden=true;
-  const tb=$('#trayBlock'); tb.hidden=true; tb.classList.remove('locked');
+  const entry=$('#addonEntry'),workspace=$('#addonWorkspace'),addonBtn=$('#addonAnalyzeBtn');
+  entry.hidden=false; entry.removeAttribute('style'); workspace.hidden=true; workspace.removeAttribute('style');
+  addonBtn.disabled=false; addonBtn.style.opacity=''; addonBtn.textContent='开始分析 · 智能搭配辅料';
+  $('#addonScanStatus').textContent='等待读取本周 IM 行为';
+  document.querySelectorAll('#addonEntry .signal-chip').forEach(c=>c.removeAttribute('style'));
+  $('#formulaBars').innerHTML=''; $('#addonCards').innerHTML=''; $('#iceTray').innerHTML='';
+  $('#detailName').textContent='—'; $('#detailEn').textContent='—';
+  $('#detailDesc').textContent=''; $('#detailReason').textContent=''; $('#detailEvidence').innerHTML='';
+  const tb=$('#trayBlock'); tb.hidden=false; tb.classList.remove('locked');
   const cb=$('#coverBtn'); cb.hidden=false; cb.disabled=true;
   $('#shakeInstr').hidden=true; $('#shakeBarWrap').hidden=true; $('#shakePct').hidden=true;
   $('#shakeFill').style.width='0%'; $('#shakePct').textContent='0%';
