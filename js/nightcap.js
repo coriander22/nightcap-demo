@@ -418,18 +418,16 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
     src.classList.add("used");
     onIce && onIce(cube.hue);
     sfx("ice");
-    zhint.textContent = st.ices.length >= 2 ? "冰已够 · 在杯上按住上下摇匀" : "再拖一块，或在杯上按住上下摇匀";
+    zhint.textContent = st.ices.length >= 2 ? "冰已够 · 在杯上按住摇匀或连点" : "再拖一块，或在杯上按住摇匀/连点";
     if (st.ices.length) zone.classList.add("shakeable");
   }
 
-  /* 摇匀手势（在左侧酒杯区按住上下动）；跟踪挂 window，不依赖 pointer capture，
-     避免捕获被浏览器中断（pointercancel）后进度卡死 */
+  /* 摇匀手势（在左侧酒杯区按住摇动，任意方向都算）；跟踪挂 window，不依赖 pointer capture，
+     避免捕获被浏览器中断（pointercancel）后进度卡死；连点也少量累计作为兜底 */
+  let lastX = null;
   let lastY = null;
-  function shakeMove(e) {
-    if (lastY == null || st.shaken >= 1) return;
-    const dy = Math.abs(e.clientY - lastY);
-    lastY = e.clientY;
-    st.shaken = Math.min(1, st.shaken + dy / 520);
+  function bump(d) {
+    st.shaken = Math.min(1, st.shaken + d);
     onShake && onShake();
     $id("nc2-sbar").style.width = `${st.shaken * 100}%`;
     zhint.textContent = `摇匀中 · ${Math.round(st.shaken * 100)}%`;
@@ -441,7 +439,15 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
       shakeEnd();
     }
   }
+  function shakeMove(e) {
+    if (lastX == null || st.shaken >= 1) return;
+    const d = Math.hypot(e.clientX - lastX, e.clientY - lastY); /* 横摇/画圈都累计 */
+    lastX = e.clientX;
+    lastY = e.clientY;
+    bump(d / 620);
+  }
   function shakeEnd() {
+    lastX = null;
     lastY = null;
     zone.classList.remove("grab");
     window.removeEventListener("pointermove", shakeMove);
@@ -452,8 +458,11 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
     if (e.target.closest("#nc2-zbtns")) return; /* 按钮上的点击不启动摇匀 */
     if (st.dragging || st.shaken >= 1) return;
     if (!st.ices.length) { zone.classList.add("nope"); setTimeout(() => zone.classList.remove("nope"), 400); return; }
+    lastX = e.clientX;
     lastY = e.clientY;
     zone.classList.add("grab");
+    bump(0.05); /* 连点兜底：每次按压 +5% */
+    if (st.shaken >= 1) return;
     window.addEventListener("pointermove", shakeMove);
     window.addEventListener("pointerup", shakeEnd);
     window.addEventListener("pointercancel", shakeEnd);
