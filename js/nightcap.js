@@ -155,6 +155,7 @@ function openAct1({ onPour, onSkip }) {
   const sp = SPIRITS[spiritKey];
   el.innerHTML = `
     <div class="nc-panel nc-act1 a1-float">
+      <p class="nc-guide"><i>第一步</i>根据你的过去焦虑情况，为你推荐一支基酒</p>
       <div class="nc-kicker"><span>ACT I</span><span>base spirit · 基酒</span></div>
       <div class="nc-a1-body">
         <button class="nc-primary nc-big" id="nc1-go" type="button">提取你的焦虑源</button>
@@ -217,6 +218,7 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
   const st = { addon: null, ices: [], shaken: 0, dragging: null };
 
   el.innerHTML = `
+    <div class="nc-guide-top" id="nc2-guide"><i>第二步</i>现在来为你挑选你的专属配料和冰块</div>
     <div class="nc-stage-grid">
       <div class="nc-zone" id="nc2-zone">
         <div class="nc-zpill" id="nc2-zpill">
@@ -329,7 +331,11 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
       sfx("lift");
     }, trayStart);
     cubes.forEach((c, i) => later(() => { addCube(c); sfx("ice"); }, trayStart + 340 + i * 380));
-    later(() => { zhint.textContent = "从右侧冰柜拖一块冰进杯里"; }, trayStart + 340 + cubes.length * 380);
+    later(() => {
+      zhint.textContent = "从右侧冰柜拖一块冰进杯里";
+      const g = $id("nc2-guide");
+      if (g) { g.classList.add("bye"); setTimeout(() => g.remove(), 700); }
+    }, trayStart + 340 + cubes.length * 380);
   }
 
   function trayCubes() {

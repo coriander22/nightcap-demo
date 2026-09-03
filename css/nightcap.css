@@ -46,12 +46,28 @@
   background: oklch(0.12 0.025 50 / 0.78); backdrop-filter: blur(9px);
   border: 1px solid oklch(0.93 0.018 85 / 0.14);
   box-shadow: 0 18px 50px -18px oklch(0.04 0.01 50 / 0.9); }
-/* 态A：收成一条窄悬浮 bar，尽量少遮背景 */
-.nc-act1.a1-float { width: auto; max-width: calc(100vw - 32px); padding: 13px 18px;
-  display: flex; align-items: center; gap: 14px; border-radius: 999px; }
+/* 态A：沉底小卡：先一句温柔引导，再给按钮 */
+.nc-act1.a1-float { width: auto; max-width: calc(100vw - 32px); padding: 16px 20px 14px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px; border-radius: 14px; }
 .nc-act1.a1-float .nc-kicker { display: none; }
 .nc-act1.a1-float .nc-a1-body { flex-direction: row; align-items: center; gap: 12px; padding: 0; }
 .nc-act1.a1-float .nc-hint { margin: 0; font-size: 10.5px; letter-spacing: 0.06em; }
+/* 步骤引导 */
+.nc-guide { display: flex; align-items: center; gap: 9px; margin: 0 0 11px;
+  font-size: 12.5px; line-height: 1.6; color: var(--ink); }
+.nc-guide i, .nc-guide-top i { font-style: normal; flex: none; font-size: 10px; letter-spacing: 0.16em;
+  color: var(--amber); border: 1px solid oklch(0.76 0.13 74 / 0.45); border-radius: 999px;
+  padding: 2px 8px; background: oklch(0.76 0.13 74 / 0.08); }
+.nc-guide-top { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); z-index: 5;
+  display: flex; align-items: center; gap: 9px; padding: 9px 16px; border-radius: 999px;
+  background: oklch(0.12 0.025 50 / 0.82); backdrop-filter: blur(8px);
+  border: 1px solid oklch(0.93 0.018 85 / 0.16); color: var(--ink); font-size: 12.5px;
+  box-shadow: 0 12px 34px -14px oklch(0.04 0.01 50 / 0.9);
+  animation: nc-in-x 0.6s var(--ease); pointer-events: none;
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
+@keyframes nc-in-x { from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+  to { opacity: 1; transform: translateX(-50%); } }
+.nc-guide-top.bye { opacity: 0; transform: translateX(-50%) translateY(-10px); }
 
 .nc-panel {
   width: min(440px, calc(100vw - 40px)); max-height: calc(100vh - 90px); overflow: auto;

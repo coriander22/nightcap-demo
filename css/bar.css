@@ -631,23 +631,69 @@ button, input {
   padding: 0;
 }
 
-/* —— 倒酒提示 —— */
+/* —— 倒酒字幕：眉题 + 大字衬线主标题，电影字卡式入场 —— */
 #toast {
   position: absolute;
   left: 50%;
-  top: 46%;
+  top: 44%;
   transform: translate(-50%, -50%);
-  font-family: var(--serif);
-  font-size: clamp(20px, 3vw, 32px);
-  letter-spacing: 0.18em;
-  color: var(--paper);
-  text-shadow: 0 8px 24px oklch(0.1 0.02 50 / 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: min(76vw, 680px);
+  text-align: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s;
+  transition: opacity 0.45s var(--ease);
+}
+
+#toast .t-kick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.52em;
+  padding-left: 0.52em;
+  color: var(--amber);
+  text-shadow: 0 2px 12px oklch(0.08 0.02 50 / 0.6);
+}
+
+#toast .t-kick:empty { display: none; }
+
+#toast .t-kick::before,
+#toast .t-kick::after { content: ""; width: 36px; height: 1px; }
+
+#toast .t-kick::before { background: linear-gradient(90deg, transparent, var(--amber)); }
+
+#toast .t-kick::after { background: linear-gradient(90deg, var(--amber), transparent); }
+
+#toast .t-main {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(26px, 4.6vw, 46px);
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  padding-left: 0.14em;
+  color: oklch(0.97 0.015 85);
+  text-shadow: 0 2px 18px oklch(0.08 0.02 50 / 0.65), 0 12px 44px oklch(0.08 0.02 50 / 0.5);
 }
 
 #toast.is-on { opacity: 1; }
+
+#toast.is-on .t-kick { animation: t-kick 0.8s var(--ease) both; }
+
+#toast.is-on .t-main { animation: t-main 0.95s var(--ease) both; }
+
+@keyframes t-kick {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes t-main {
+  from { opacity: 0; letter-spacing: 0.34em; filter: blur(8px); }
+  to { opacity: 1; letter-spacing: 0.14em; filter: blur(0); }
+}
 
 @media (max-width: 720px) {
   .topbar { align-items: center; gap: 10px; }

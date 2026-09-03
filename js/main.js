@@ -185,10 +185,14 @@ function closeSheet() {
 }
 
 function flashToast(text) {
-  ui.toast.textContent = text;
+  const parts = text.split("·").map((s) => s.trim());
+  ui.toast.querySelector(".t-kick").textContent = parts.length > 1 ? parts[0] : "";
+  ui.toast.querySelector(".t-main").textContent = parts.length > 1 ? parts.slice(1).join(" · ") : text;
+  ui.toast.classList.remove("is-on");
+  void ui.toast.offsetWidth; /* 重播入场动画 */
   ui.toast.classList.add("is-on");
   clearTimeout(flashToast._t);
-  flashToast._t = setTimeout(() => ui.toast.classList.remove("is-on"), 1400);
+  flashToast._t = setTimeout(() => ui.toast.classList.remove("is-on"), 1600);
 }
 
 function clink() {
