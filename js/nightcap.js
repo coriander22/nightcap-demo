@@ -451,6 +451,118 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
   $id("nc2-skip").onclick = () => { el.hidden = true; onSkip(); };
 }
 
+/* ---------- 生成式曲目：按这杯的基酒与名字实时作曲（lo-fi 黑胶） ---------- */
+let vinylTrack = null;
+let vinylPlaying = false;
+
+function hashSeed(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function mulberry(a) {
+  return () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const TRACK_KEYS = { whiskey: 220, tequila: 196, rum: 174.61, gin: 261.63, vodka: 164.81 };
+
+function createVinylTrack(drink, spiritKey) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = ctx.createGain();
+  master.gain.value = 0.0001;
+  master.connect(ctx.destination);
+  const lp = ctx.createBiquadFilter();
+  lp.type = "lowpass"; lp.frequency.value = 2400; lp.connect(master);
+  const delay = ctx.createDelay(1);
+  delay.delayTime.value = 0.31;
+  const fb = ctx.createGain(); fb.gain.value = 0.22;
+  delay.connect(fb); fb.connect(delay); delay.connect(lp);
+  const rnd = mulberry(hashSeed(drink.name + spiritKey));
+  const root = TRACK_KEYS[spiritKey] || 220;
+  const prog = [0, 8, 5, 3];
+  const penta = [0, 3, 5, 7, 10, 12];
+  const BAR = 2.6;
+  const semi = (f, s) => f * Math.pow(2, s / 12);
+  let bar = 0, timer = null, crackle = null, nextT = 0;
+
+  function pad(t, f) {
+    [0, 4, 7, 12].forEach((iv, i) => {
+      const o = ctx.createOscillator();
+      o.type = "triangle"; o.frequency.value = semi(f, iv); o.detune.value = (i - 1.5) * 6;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.05, t + 0.5);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + BAR * 0.98);
+      o.connect(g); g.connect(lp); o.start(t); o.stop(t + BAR);
+    });
+  }
+  function bass(t, f) {
+    const o = ctx.createOscillator();
+    o.type = "sine"; o.frequency.value = f / 2;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.09, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+    o.connect(g); g.connect(lp); o.start(t); o.stop(t + 1.2);
+  }
+  function pluck(t, f) {
+    const o = ctx.createOscillator();
+    o.type = "sine"; o.frequency.value = f;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.055, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    o.connect(g); g.connect(lp); g.connect(delay); o.start(t); o.stop(t + 0.8);
+  }
+  function scheduleBar(t) {
+    const f = semi(root, prog[bar % prog.length]);
+    pad(t, f); bass(t, f);
+    for (let b = 0; b < 4; b++) {
+      if (rnd() < 0.62) pluck(t + b * (BAR / 4) + rnd() * 0.12, semi(root, penta[(rnd() * penta.length) | 0] + 12));
+    }
+    bar++;
+  }
+  function startCrackle() {
+    const n = ctx.sampleRate * 2;
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() < 0.0016 ? (Math.random() * 2 - 1) * 0.5 : (Math.random() * 2 - 1) * 0.06);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1800;
+    const g = ctx.createGain(); g.gain.value = 0.05;
+    src.connect(hp); hp.connect(g); g.connect(master); src.start();
+    crackle = src;
+  }
+  function tick() { while (nextT < ctx.currentTime + 1.0) { scheduleBar(nextT); nextT += BAR; } }
+
+  return {
+    start() {
+      ctx.resume();
+      master.gain.setTargetAtTime(0.9, ctx.currentTime, 0.4);
+      startCrackle();
+      nextT = ctx.currentTime + 0.15;
+      tick();
+      timer = setInterval(tick, 400);
+    },
+    stop() {
+      clearInterval(timer); timer = null;
+      master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25);
+      try { crackle && crackle.stop(ctx.currentTime + 0.8); } catch (e) {}
+      setTimeout(() => { if (!timer) ctx.close().catch(() => {}); }, 1200);
+    },
+  };
+}
+
+function stopVinyl() {
+  if (vinylTrack) { vinylTrack.stop(); vinylTrack = null; }
+  vinylPlaying = false;
+}
+
 /* ---------- 幕三：原有尾调页 ---------- */
 function openReveal({ drink, spiritKey, addonKey, personaKey }) {
   const el = $id("nc3");
@@ -459,37 +571,81 @@ function openReveal({ drink, spiritKey, addonKey, personaKey }) {
   const addon = ADDONS.find((a) => a.k === addonKey) || ADDONS[0];
   const P = PERSONAS[personaKey || predictPersona()];
   el.innerHTML = `
-    <div class="nc-page-card">
-      <div class="nc-kicker"><span>ACT III</span><span>tonight's special · 尾调</span></div>
-      <h2>${drink.name}</h2>
-      <p class="nc-pgen">${drink.type} · ${P.en} · ${sp.en} base</p>
-      <div class="nc-rows">
-        <div><span>Base 基酒</span><b>${sp.zh} · 烈度 Lv.${sp.proof}</b></div>
-        <div><span>Addon 职场辅料</span><b>${addon.name} · 配方 ${addon.pct}%</b></div>
-        <div><span>Ice 冰块</span><b>${P.ice.name}</b></div>
-        <div><span>Persona 人格</span><b>${P.zh}</b></div>
+    <div class="nc-page-grid">
+      <div class="nc-page-left">
+        <button class="nc-vinyl" id="nc3-vinyl" type="button" aria-label="播放这杯的生成式曲目">
+          <span class="vc-disc">
+            <span class="vc-label"><b>NC</b><s>33⅓ RPM</s></span>
+            <i class="vc-spindle"></i>
+          </span>
+          <span class="vc-arm"></span>
+          <span class="vc-hint" id="nc3-vhint">点击播放 · 生成式曲目</span>
+        </button>
       </div>
-      <p class="nc-poem">${poemFor(sp.zh, P)}</p>
-      <div class="nc-track"><b>♪ ${P.track.t}</b><s>${P.track.s} · 生成式环境音</s></div>
-      <div class="nc-todo"><span>明天的第一步</span><p>${todoFor()}</p></div>
-      <div class="nc-btns">
-        <button class="nc-primary" id="nc3-shot" type="button">保存截图</button>
-        <button class="nc-ghost" id="nc3-again" type="button">再调一杯</button>
-        <button class="nc-ghost" id="nc3-close" type="button">看这杯</button>
+      <div class="nc-page-card">
+        <div class="nc-kicker"><span>ACT III</span><span>tonight's special · 尾调</span></div>
+        <h2>${drink.name}</h2>
+        <p class="nc-pgen">${drink.type} · ${P.en} · ${sp.en} base</p>
+        <div class="nc-rows">
+          <div><span>Base 基酒</span><b>${sp.zh} · 烈度 Lv.${sp.proof}</b></div>
+          <div><span>Addon 职场辅料</span><b>${addon.name} · 配方 ${addon.pct}%</b></div>
+          <div><span>Ice 冰块</span><b>${P.ice.name}</b></div>
+          <div><span>Persona 人格</span><b>${P.zh}</b></div>
+        </div>
+        <p class="nc-poem">${poemFor(sp.zh, P)}</p>
+        <div class="nc-track"><b>♪ ${P.track.t}</b><s>${sp.zh} 调 · lo-fi 生成 · 点左侧黑胶播放</s></div>
+        <div class="nc-todo"><span>明天的第一步</span><p>${todoFor()}</p></div>
+        <div class="nc-btns">
+          <button class="nc-primary" id="nc3-shot" type="button">保存截图</button>
+          <button class="nc-ghost" id="nc3-again" type="button">再调一杯</button>
+          <button class="nc-ghost" id="nc3-close" type="button">看这杯</button>
+        </div>
       </div>
     </div>`;
   el.hidden = false;
+  const vbtn = $id("nc3-vinyl");
+  vbtn.onclick = () => {
+    if (vinylPlaying) {
+      stopVinyl();
+      vbtn.classList.remove("playing");
+      $id("nc3-vhint").textContent = "点击播放 · 生成式曲目";
+    } else {
+      vinylTrack = createVinylTrack(drink, spiritKey);
+      vinylTrack.start();
+      vinylPlaying = true;
+      vbtn.classList.add("playing");
+      $id("nc3-vhint").textContent = `播放中 · ${P.track.t}`;
+      sfx("lift");
+    }
+  };
   $id("nc3-shot").onclick = () => window.dispatchEvent(new CustomEvent("nc-shot"));
-  $id("nc3-again").onclick = () => window.dispatchEvent(new CustomEvent("nc-again"));
-  $id("nc3-close").onclick = () => { el.hidden = true; window.dispatchEvent(new CustomEvent("nc-closed-reveal")); };
+  $id("nc3-again").onclick = () => { stopVinyl(); window.dispatchEvent(new CustomEvent("nc-again")); };
+  $id("nc3-close").onclick = () => {
+    stopVinyl();
+    el.hidden = true;
+    window.dispatchEvent(new CustomEvent("nc-closed-reveal"));
+  };
 }
 
 function closeAll() {
+  stopVinyl();
   ["nc1", "nc2", "nc3"].forEach((id) => { const el = $id(id); if (el) el.hidden = true; });
 }
 
 export const NC = {
   STRESS, PROOF, SPIRITS, ADDONS, spiritOf, mixColor,
   openAct1, openAct2, openReveal, closeAll,
-  setSound(s) { sound = s; },
+  setSound(s) {
+    sound = s;
+    try {
+      s.onMute((m) => {
+        if (!m || !vinylPlaying) return;
+        stopVinyl();
+        const v = $id("nc3-vinyl");
+        if (v) v.classList.remove("playing");
+        const h = $id("nc3-vhint");
+        if (h) h.textContent = "点击播放 · 生成式曲目";
+      });
+    } catch (e) {}
+  },
 };

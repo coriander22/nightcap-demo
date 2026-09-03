@@ -64,7 +64,7 @@ function finishAct2(drink, res) {
     bar.setLiquidColor(NC.mixColor(drink.color, addon.hue, 0.3));
   }
   if (res.ices && res.ices.length) { drink.ice = true; bar.redress(drink); }
-  bar.frameGlass("center");
+  bar.frameGlass("left"); /* 幕三：酒杯居左，与黑胶同侧 */
   NC.openReveal({
     drink,
     spiritKey: ncPick.spirit || NC.spiritOf(drink),
