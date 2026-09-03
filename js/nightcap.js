@@ -401,6 +401,7 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
     const up = (e) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
       ghost.remove();
       zone.classList.remove("over");
       st.dragging = null;
@@ -409,6 +410,7 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up); /* 手势被系统中断也要清理 dragging，否则会永久卡住摇匀 */
   }
 
   function addIce(cube, src) {
@@ -420,17 +422,10 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
     if (st.ices.length) zone.classList.add("shakeable");
   }
 
-  /* 摇匀手势（在左侧酒杯区按住上下动） */
+  /* 摇匀手势（在左侧酒杯区按住上下动）；跟踪挂 window，不依赖 pointer capture，
+     避免捕获被浏览器中断（pointercancel）后进度卡死 */
   let lastY = null;
-  zone.addEventListener("pointerdown", (e) => {
-    if (e.target.closest("#nc2-zbtns")) return; /* 按钮上的点击不启动摇匀，也不被捕获 */
-    if (st.dragging || st.shaken >= 1) return;
-    if (!st.ices.length) { zone.classList.add("nope"); setTimeout(() => zone.classList.remove("nope"), 400); return; }
-    lastY = e.clientY;
-    try { zone.setPointerCapture(e.pointerId); } catch (err) {}
-    zone.classList.add("grab");
-  });
-  zone.addEventListener("pointermove", (e) => {
+  function shakeMove(e) {
     if (lastY == null || st.shaken >= 1) return;
     const dy = Math.abs(e.clientY - lastY);
     lastY = e.clientY;
@@ -443,9 +438,26 @@ function openAct2(drink, { onIce, onShake, onDone, onSkip }) {
       zhint.textContent = "辅料与冰已调和";
       $id("nc2-zbtns").hidden = false;
       sfx("clink");
+      shakeEnd();
     }
+  }
+  function shakeEnd() {
+    lastY = null;
+    zone.classList.remove("grab");
+    window.removeEventListener("pointermove", shakeMove);
+    window.removeEventListener("pointerup", shakeEnd);
+    window.removeEventListener("pointercancel", shakeEnd);
+  }
+  zone.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#nc2-zbtns")) return; /* 按钮上的点击不启动摇匀 */
+    if (st.dragging || st.shaken >= 1) return;
+    if (!st.ices.length) { zone.classList.add("nope"); setTimeout(() => zone.classList.remove("nope"), 400); return; }
+    lastY = e.clientY;
+    zone.classList.add("grab");
+    window.addEventListener("pointermove", shakeMove);
+    window.addEventListener("pointerup", shakeEnd);
+    window.addEventListener("pointercancel", shakeEnd);
   });
-  ["pointerup", "pointercancel"].forEach((t) => zone.addEventListener(t, () => { lastY = null; zone.classList.remove("grab"); }));
 
   $id("nc2-pour").onclick = () => { el.hidden = true; onDone({ addon: st.addon, ices: st.ices, persona: personaKey }); };
   $id("nc2-skip").onclick = () => { el.hidden = true; onSkip(); };
